@@ -1,0 +1,37 @@
+diff --git a/src/queries/sql/reports/getFunnel.test.ts b/src/queries/sql/reports/getFunnel.test.ts
+index 7219a50..2611ce0 100644
+--- a/src/queries/sql/reports/getFunnel.test.ts
++++ b/src/queries/sql/reports/getFunnel.test.ts
+@@ -72,6 +72,20 @@ beforeEach(() => {
+ });
+ 
+ describe('getFunnel postgres branch', () => {
++  test('emits an explicit report start bound for every subsequent step', async () => {
++    await getFunnel(
++      'website-1',
++      {
++        ...baseParameters,
++        steps: Array.from({ length: 8 }, (_, i) => ({ type: 'path', value: `/step-${i}` })),
++      },
++      {},
++    );
++
++    const [query] = prismaRawQuery.mock.calls[0];
++    expect(query.match(/and we\.created_at >= \{\{startDate}}/g)).toHaveLength(7);
++  });
++
+   test('builds level CTEs and a UNION sum query, one per step', async () => {
+     await getFunnel('website-1', baseParameters, {});
+ 
+diff --git a/src/queries/sql/reports/getFunnel.ts b/src/queries/sql/reports/getFunnel.ts
+index 72148ae..fa8521c 100644
+--- a/src/queries/sql/reports/getFunnel.ts
++++ b/src/queries/sql/reports/getFunnel.ts
+@@ -154,6 +154,7 @@ async function relationalQuery(
+                   `${window} minute`,
+                 )}
+                 and we.${column} ${operator} {{${i}}}
++                and we.created_at >= {{startDate}}
+                 and we.created_at <= {{endDate}}
+                 ${existsClause}
+           )`;

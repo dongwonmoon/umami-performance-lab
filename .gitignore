@@ -1,0 +1,9 @@
+.local/
+.env
+.env.*
+!.env.example
+node_modules/
+*.dump
+*.sql.gz
+*.log
+.DS_Store
