@@ -1,0 +1,191 @@
+diff --git a/src/queries/sql/reports/getPerformance.ts b/src/queries/sql/reports/getPerformance.ts
+index 1abe9c5..93e7c8f 100644
+--- a/src/queries/sql/reports/getPerformance.ts
++++ b/src/queries/sql/reports/getPerformance.ts
+@@ -44,7 +44,8 @@ async function relationalQuery(
+     websiteId,
+   });
+ 
+-  const chart = await rawQuery(
++  const [chart, summaryResult] = await Promise.all([
++    rawQuery(
+     `
+     select
+       ${getDateSQL('website_event.created_at', unit, timezone)} t,
+@@ -62,10 +63,10 @@ async function relationalQuery(
+     order by t
+     `,
+     { ...queryParams, startDate, endDate },
+-  );
++    ),
+ 
+-  const summaryResult = await rawQuery(
+-    `
++    rawQuery(
++      `
+     select
+       percentile_cont(0.5) within group (order by lcp) as lcp_p50,
+       percentile_cont(0.75) within group (order by lcp) as lcp_p75,
+@@ -91,8 +92,9 @@ async function relationalQuery(
+       and website_event.created_at between {{startDate}} and {{endDate}}
+       ${filterQuery}
+     `,
+-    { ...queryParams, startDate, endDate },
+-  ).then(result => result?.[0]);
++      { ...queryParams, startDate, endDate },
++    ).then(result => result?.[0]),
++  ]);
+ 
+   const summary = {
+     lcp: {
+@@ -135,8 +137,9 @@ async function clickhouseQuery(
+   const { getDateSQL, rawQuery, parseFilters } = clickhouse;
+   const { filterQuery, cohortQuery, queryParams } = parseFilters({ ...filters, websiteId });
+ 
+-  const chart = await rawQuery<{ t: string; p50: number; p75: number; p95: number }[]>(
+-    `
++  const [chart, summaryResult] = await Promise.all([
++    rawQuery<{ t: string; p50: number; p75: number; p95: number }[]>(
++      `
+     select
+       ${getDateSQL('created_at', unit, timezone)} t,
+       quantile(0.5)(${metric}) as p50,
+@@ -151,11 +154,11 @@ async function clickhouseQuery(
+     group by t
+     order by t
+     `,
+-    { ...queryParams, startDate, endDate },
+-  );
++      { ...queryParams, startDate, endDate },
++    ),
+ 
+-  const summaryResult = await rawQuery<any>(
+-    `
++    rawQuery<any>(
++      `
+     select
+       quantile(0.5)(lcp) as lcp_p50,
+       quantile(0.75)(lcp) as lcp_p75,
+@@ -180,8 +183,9 @@ async function clickhouseQuery(
+       and website_event.created_at between {startDate:DateTime64} and {endDate:DateTime64}
+       ${filterQuery}
+     `,
+-    { ...queryParams, startDate, endDate },
+-  ).then(result => result?.[0]);
++      { ...queryParams, startDate, endDate },
++    ).then(result => result?.[0]),
++  ]);
+ 
+   const summary = {
+     lcp: {
+diff --git a/src/queries/sql/reports/getPerformance.test.ts b/src/queries/sql/reports/getPerformance.test.ts
+new file mode 100644
+index 0000000..50d26fd
+--- /dev/null
++++ b/src/queries/sql/reports/getPerformance.test.ts
+@@ -0,0 +1,105 @@
++import { beforeEach, describe, expect, test, vi } from 'vitest';
++import { getPerformance } from './getPerformance';
++
++const { state, prismaRawQuery, prismaParseFilters, clickhouseRawQuery, clickhouseParseFilters } =
++  vi.hoisted(() => ({
++    state: { mode: 'prisma' as 'prisma' | 'clickhouse' },
++    prismaRawQuery: vi.fn(),
++    prismaParseFilters: vi.fn(),
++    clickhouseRawQuery: vi.fn(),
++    clickhouseParseFilters: vi.fn(),
++  }));
++
++vi.mock('@/lib/db', () => ({
++  CLICKHOUSE: 'clickhouse',
++  PRISMA: 'prisma',
++  runQuery: vi.fn((queries: Record<string, () => unknown>) => queries[state.mode]()),
++}));
++
++vi.mock('@/lib/prisma', () => ({
++  default: {
++    rawQuery: prismaRawQuery,
++    parseFilters: prismaParseFilters,
++    getDateSQL: vi.fn(() => 'date_bucket'),
++  },
++}));
++
++vi.mock('@/lib/clickhouse', () => ({
++  default: {
++    rawQuery: clickhouseRawQuery,
++    parseFilters: clickhouseParseFilters,
++    getDateSQL: vi.fn(() => 'date_bucket'),
++  },
++}));
++
++const parameters = {
++  startDate: new Date('2026-08-01T00:00:00.000Z'),
++  endDate: new Date('2026-08-08T00:00:00.000Z'),
++  unit: 'day',
++  timezone: 'UTC',
++  metric: 'lcp',
++};
++
++function deferred<T>() {
++  let resolve!: (value: T) => void;
++  const promise = new Promise<T>(value => { resolve = value; });
++  return { promise, resolve };
++}
++
++beforeEach(() => {
++  prismaParseFilters.mockReset();
++  clickhouseParseFilters.mockReset();
++  prismaRawQuery.mockReset();
++  clickhouseRawQuery.mockReset();
++  const parsed = { filterQuery: '', joinSessionQuery: '', cohortQuery: '', queryParams: {} };
++  prismaParseFilters.mockReturnValue(parsed);
++  clickhouseParseFilters.mockReturnValue(parsed);
++});
++
++describe.each(['prisma', 'clickhouse'] as const)('%s performance query', mode => {
++  beforeEach(() => {
++    state.mode = mode;
++  });
++
++  test('starts chart and summary reads together and preserves both results', async () => {
++    const chart = [{ t: '2026-08-01', p50: 1, p75: 2, p95: 3 }];
++    const summary = [{
++      lcp_p50: 4, lcp_p75: 5, lcp_p95: 6,
++      inp_p50: 7, inp_p75: 8, inp_p95: 9,
++      cls_p50: 10, cls_p75: 11, cls_p95: 12,
++      fcp_p50: 13, fcp_p75: 14, fcp_p95: 15,
++      ttfb_p50: 16, ttfb_p75: 17, ttfb_p95: 18,
++      count: 19,
++    }];
++    const chartDeferred = deferred<typeof chart>();
++    const summaryDeferred = deferred<typeof summary>();
++    const calls: string[] = [];
++    const rawQuery = mode === 'prisma' ? prismaRawQuery : clickhouseRawQuery;
++    rawQuery.mockImplementation((query: string) => {
++      if (/as p50[,\n]/.test(query)) {
++        calls.push('chart');
++        return chartDeferred.promise;
++      }
++      calls.push('summary');
++      return summaryDeferred.promise;
++    });
++
++    const resultPromise = getPerformance('website-1', parameters, {});
++    await Promise.resolve();
++    expect(calls).toEqual(['chart', 'summary']);
++
++    chartDeferred.resolve(chart);
++    summaryDeferred.resolve(summary);
++    await expect(resultPromise).resolves.toEqual({
++      chart,
++      summary: {
++        lcp: { p50: 4, p75: 5, p95: 6 },
++        inp: { p50: 7, p75: 8, p95: 9 },
++        cls: { p50: 10, p75: 11, p95: 12 },
++        fcp: { p50: 13, p75: 14, p95: 15 },
++        ttfb: { p50: 16, p75: 17, p95: 18 },
++        count: 19,
++      },
++    });
++  });
++});

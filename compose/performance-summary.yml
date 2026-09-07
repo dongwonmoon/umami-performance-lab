@@ -1,0 +1,42 @@
+# Local comparison only; existing disposable ingestion DB, public dummy secrets.
+name: umami-performance
+services:
+  parallel:
+    profiles: [comparison]
+    image: umami-performance:parallel
+    container_name: umami-performance-parallel
+    command: [node, server.js]
+    init: true
+    ports:
+      - 127.0.0.1:3006:3000
+    environment:
+      DATABASE_URL: postgresql://umami:umami@db:5432/umami
+      APP_SECRET: disposable-performance-summary-only
+      TWO_FACTOR_ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+    networks: [ingestion]
+    healthcheck:
+      test: [CMD, curl, -fsS, http://localhost:3000/api/heartbeat]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+  app:
+    image: umami-performance:summary
+    container_name: umami-performance-summary
+    command: [node, server.js]
+    init: true
+    ports:
+      - 127.0.0.1:3005:3000
+    environment:
+      DATABASE_URL: postgresql://umami:umami@db:5432/umami
+      APP_SECRET: disposable-performance-summary-only
+      TWO_FACTOR_ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+    networks: [ingestion]
+    healthcheck:
+      test: [CMD, curl, -fsS, http://localhost:3000/api/heartbeat]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+networks:
+  ingestion:
+    external: true
+    name: umami-ingestion_default

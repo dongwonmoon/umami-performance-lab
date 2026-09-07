@@ -1,0 +1,661 @@
+diff --git a/src/app/(main)/websites/[websiteId]/(reports)/performance/Performance.tsx b/src/app/(main)/websites/[websiteId]/(reports)/performance/Performance.tsx
+index db8d64b..05072ee 100644
+--- a/src/app/(main)/websites/[websiteId]/(reports)/performance/Performance.tsx
++++ b/src/app/(main)/websites/[websiteId]/(reports)/performance/Performance.tsx
+@@ -18,7 +18,7 @@ import { BarChart } from '@/components/charts/BarChart';
+ import { GridRow } from '@/components/common/GridRow';
+ import { LoadingPanel } from '@/components/common/LoadingPanel';
+ import { Panel } from '@/components/common/Panel';
+-import { useLocale, useMessages, useResultQuery } from '@/components/hooks';
++import { useLocale, useMessages, usePerformanceQuery } from '@/components/hooks';
+ import { ListTable } from '@/components/metrics/ListTable';
+ import { MetricLabel } from '@/components/metrics/MetricLabel';
+ import { PerformanceCard } from '@/components/metrics/PerformanceCard';
+@@ -63,7 +63,7 @@ export function Performance({ websiteId, startDate, endDate, unit }: Performance
+   const { t, labels } = useMessages();
+   const { locale, dateLocale } = useLocale();
+ 
+-  const { data, error, isLoading } = useResultQuery<any>('performance', {
++  const { data, error, isLoading } = usePerformanceQuery({
+     websiteId,
+     startDate,
+     endDate,
+diff --git a/src/app/api/reports/performance/route.ts b/src/app/api/reports/performance/route.ts
+index 449eb33..1483b4c 100644
+--- a/src/app/api/reports/performance/route.ts
++++ b/src/app/api/reports/performance/route.ts
+@@ -21,6 +21,11 @@ export async function POST(request: Request) {
+   const parameters = await setWebsiteDate(websiteId, body.parameters);
+   const filters = await getQueryFilters(body.filters, websiteId);
+ 
++  if (parameters.section === 'summary') {
++    const { summary } = await getPerformance(websiteId, parameters as PerformanceParameters, filters);
++    return json({ summary });
++  }
++
+   const [{ chart, summary }, pages, pageTitles, devices, browsers] = await Promise.all([
+     getPerformance(websiteId, parameters as PerformanceParameters, filters),
+     getPerformanceMetrics(websiteId, parameters as PerformanceParameters, filters, 'url_path', 500),
+@@ -35,5 +40,9 @@ export async function POST(request: Request) {
+     getPerformanceMetrics(websiteId, parameters as PerformanceParameters, filters, 'browser', 500),
+   ]);
+ 
++  if (parameters.section === 'details') {
++    return json({ chart, pages, pageTitles, devices, browsers });
++  }
++
+   return json({ chart, summary, pages, pageTitles, devices, browsers });
+ }
+diff --git a/src/components/hooks/index.ts b/src/components/hooks/index.ts
+index bff1d0f..cc0d843 100644
+--- a/src/components/hooks/index.ts
++++ b/src/components/hooks/index.ts
+@@ -30,6 +30,7 @@ export * from './queries/useTwoFactorVerifyMutation';
+ export * from './queries/usePixelQuery';
+ export * from './queries/usePixelSharesQuery';
+ export * from './queries/usePixelsQuery';
++export * from './queries/usePerformanceQuery';
+ export * from './queries/usePropertyArraySeriesQuery';
+ export * from './queries/usePropertyDateSeriesQuery';
+ export * from './queries/usePropertyFieldsQuery';
+diff --git a/src/lib/schema.test.ts b/src/lib/schema.test.ts
+index 67c6446..5e73c1c 100644
+--- a/src/lib/schema.test.ts
++++ b/src/lib/schema.test.ts
+@@ -6,6 +6,7 @@ import {
+   funnelReportSchema,
+   goalReportSchema,
+   pagingParams,
++  performanceReportSchema,
+   reportBaseSchema,
+   reportTypeSchema,
+   segmentTypeParam,
+@@ -194,6 +195,28 @@ describe('goalReportSchema', () => {
+   });
+ });
+ 
++describe('performanceReportSchema', () => {
++  test('accepts summary and details sections', () => {
++    for (const section of ['summary', 'details']) {
++      expect(
++        performanceReportSchema.parse({
++          type: 'performance',
++          parameters: { startDate: '2024-01-01', endDate: '2024-01-31', section },
++        }).parameters.section,
++      ).toBe(section);
++    }
++  });
++
++  test('rejects an unknown section', () => {
++    expect(() =>
++      performanceReportSchema.parse({
++        type: 'performance',
++        parameters: { startDate: '2024-01-01', endDate: '2024-01-31', section: 'full' },
++      }),
++    ).toThrow();
++  });
++});
++
+ describe('funnelReportSchema', () => {
+   const valid = {
+     type: 'funnel' as const,
+diff --git a/src/lib/schema.ts b/src/lib/schema.ts
+index a586238..d847504 100644
+--- a/src/lib/schema.ts
++++ b/src/lib/schema.ts
+@@ -247,6 +247,7 @@ export const performanceReportSchema = z.object({
+     unit: unitParam.optional(),
+     timezone: timezoneParam.optional(),
+     metric: z.enum(['lcp', 'inp', 'cls', 'fcp', 'ttfb']).optional(),
++    section: z.enum(['summary', 'details']).optional(),
+   }),
+ });
+ 
+diff --git a/src/queries/sql/reports/getPerformance.ts b/src/queries/sql/reports/getPerformance.ts
+index 1abe9c5..df50545 100644
+--- a/src/queries/sql/reports/getPerformance.ts
++++ b/src/queries/sql/reports/getPerformance.ts
+@@ -9,11 +9,12 @@ export interface PerformanceParameters {
+   unit: string;
+   timezone: string;
+   metric: string;
++  section?: 'summary' | 'details';
+ }
+ 
+ export interface PerformanceResult {
+-  chart: { t: string; p50: number; p75: number; p95: number }[];
+-  summary: {
++  chart?: { t: string; p50: number; p75: number; p95: number }[];
++  summary?: {
+     lcp: { p50: number; p75: number; p95: number };
+     inp: { p50: number; p75: number; p95: number };
+     cls: { p50: number; p75: number; p95: number };
+@@ -37,14 +38,14 @@ async function relationalQuery(
+   parameters: PerformanceParameters,
+   filters: QueryFilters,
+ ): Promise<PerformanceResult> {
+-  const { startDate, endDate, unit = 'day', timezone = 'utc', metric = 'lcp' } = parameters;
++  const { startDate, endDate, unit = 'day', timezone = 'utc', metric = 'lcp', section } = parameters;
+   const { getDateSQL, rawQuery, parseFilters } = prisma;
+   const { filterQuery, joinSessionQuery, cohortQuery, queryParams } = parseFilters({
+     ...filters,
+     websiteId,
+   });
+ 
+-  const chart = await rawQuery(
++  const chart = section === 'summary' ? undefined : await rawQuery(
+     `
+     select
+       ${getDateSQL('website_event.created_at', unit, timezone)} t,
+@@ -64,7 +65,7 @@ async function relationalQuery(
+     { ...queryParams, startDate, endDate },
+   );
+ 
+-  const summaryResult = await rawQuery(
++  const summaryResult = section === 'details' ? undefined : await rawQuery(
+     `
+     select
+       percentile_cont(0.5) within group (order by lcp) as lcp_p50,
+@@ -94,7 +95,7 @@ async function relationalQuery(
+     { ...queryParams, startDate, endDate },
+   ).then(result => result?.[0]);
+ 
+-  const summary = {
++  const summary = section === 'details' ? undefined : {
+     lcp: {
+       p50: Number(summaryResult?.lcp_p50 || 0),
+       p75: Number(summaryResult?.lcp_p75 || 0),
+@@ -123,7 +124,7 @@ async function relationalQuery(
+     count: Number(summaryResult?.count || 0),
+   };
+ 
+-  return { chart, summary };
++  return { ...(section === 'summary' ? {} : { chart }), ...(section === 'details' ? {} : { summary }) };
+ }
+ 
+ async function clickhouseQuery(
+@@ -131,11 +132,11 @@ async function clickhouseQuery(
+   parameters: PerformanceParameters,
+   filters: QueryFilters,
+ ): Promise<PerformanceResult> {
+-  const { startDate, endDate, unit = 'day', timezone = 'utc', metric = 'lcp' } = parameters;
++  const { startDate, endDate, unit = 'day', timezone = 'utc', metric = 'lcp', section } = parameters;
+   const { getDateSQL, rawQuery, parseFilters } = clickhouse;
+   const { filterQuery, cohortQuery, queryParams } = parseFilters({ ...filters, websiteId });
+ 
+-  const chart = await rawQuery<{ t: string; p50: number; p75: number; p95: number }[]>(
++  const chart = section === 'summary' ? undefined : await rawQuery<{ t: string; p50: number; p75: number; p95: number }[]>(
+     `
+     select
+       ${getDateSQL('created_at', unit, timezone)} t,
+@@ -154,7 +155,7 @@ async function clickhouseQuery(
+     { ...queryParams, startDate, endDate },
+   );
+ 
+-  const summaryResult = await rawQuery<any>(
++  const summaryResult = section === 'details' ? undefined : await rawQuery<any>(
+     `
+     select
+       quantile(0.5)(lcp) as lcp_p50,
+@@ -183,7 +184,7 @@ async function clickhouseQuery(
+     { ...queryParams, startDate, endDate },
+   ).then(result => result?.[0]);
+ 
+-  const summary = {
++  const summary = section === 'details' ? undefined : {
+     lcp: {
+       p50: Number(summaryResult?.lcp_p50 || 0),
+       p75: Number(summaryResult?.lcp_p75 || 0),
+@@ -212,5 +213,5 @@ async function clickhouseQuery(
+     count: Number(summaryResult?.count || 0),
+   };
+ 
+-  return { chart, summary };
++  return { ...(section === 'summary' ? {} : { chart }), ...(section === 'details' ? {} : { summary }) };
+ }
+diff --git a/src/queries/sql/reports/getPerformance.test.ts b/src/queries/sql/reports/getPerformance.test.ts
+new file mode 100644
+index 0000000..e382b2d
+--- /dev/null
++++ b/src/queries/sql/reports/getPerformance.test.ts
+@@ -0,0 +1,99 @@
++import { beforeEach, describe, expect, test, vi } from 'vitest';
++import { getPerformance } from './getPerformance';
++
++const { state, prismaRawQuery, prismaParseFilters, clickhouseRawQuery, clickhouseParseFilters } =
++  vi.hoisted(() => ({
++    state: { mode: 'prisma' as 'prisma' | 'clickhouse' },
++    prismaRawQuery: vi.fn(),
++    prismaParseFilters: vi.fn(),
++    clickhouseRawQuery: vi.fn(),
++    clickhouseParseFilters: vi.fn(),
++  }));
++
++vi.mock('@/lib/db', () => ({
++  CLICKHOUSE: 'clickhouse',
++  PRISMA: 'prisma',
++  runQuery: vi.fn((queries: Record<string, () => unknown>) => queries[state.mode]()),
++}));
++
++vi.mock('@/lib/prisma', () => ({
++  default: {
++    rawQuery: prismaRawQuery,
++    parseFilters: prismaParseFilters,
++    getDateSQL: vi.fn(() => 'date_bucket'),
++  },
++}));
++
++vi.mock('@/lib/clickhouse', () => ({
++  default: {
++    rawQuery: clickhouseRawQuery,
++    parseFilters: clickhouseParseFilters,
++    getDateSQL: vi.fn(() => 'date_bucket'),
++  },
++}));
++
++const parameters = {
++  startDate: new Date('2026-08-01T00:00:00.000Z'),
++  endDate: new Date('2026-08-08T00:00:00.000Z'),
++  unit: 'day',
++  timezone: 'UTC',
++  metric: 'lcp',
++};
++const chartResult = [{ t: '2026-08-01', p50: 1, p75: 2, p95: 3 }];
++
++beforeEach(() => {
++  state.mode = 'prisma';
++  prismaRawQuery.mockReset();
++  prismaParseFilters.mockReset();
++  clickhouseRawQuery.mockReset();
++  clickhouseParseFilters.mockReset();
++
++  const parsed = { filterQuery: '', joinSessionQuery: '', cohortQuery: '', queryParams: {} };
++  prismaParseFilters.mockReturnValue(parsed);
++  clickhouseParseFilters.mockReturnValue(parsed);
++  const summary = {
++    lcp_p50: 1,
++    lcp_p75: 2,
++    lcp_p95: 3,
++    inp_p50: 4,
++    inp_p75: 5,
++    inp_p95: 6,
++    cls_p50: 7,
++    cls_p75: 8,
++    cls_p95: 9,
++    fcp_p50: 10,
++    fcp_p75: 11,
++    fcp_p95: 12,
++    ttfb_p50: 13,
++    ttfb_p75: 14,
++    ttfb_p95: 15,
++    count: 16,
++  };
++  const respond = (query: string) => (query.includes('lcp_p50') ? [summary] : chartResult);
++  prismaRawQuery.mockImplementation((query: string) => Promise.resolve(respond(query)));
++  clickhouseRawQuery.mockImplementation((query: string) => Promise.resolve(respond(query)));
++});
++
++describe.each(['prisma', 'clickhouse'] as const)('%s performance query', mode => {
++  beforeEach(() => {
++    state.mode = mode;
++  });
++
++  test.each([
++    ['default', undefined, 2, ['chart', 'summary']],
++    ['summary', 'summary', 1, ['summary']],
++    ['details', 'details', 1, ['chart']],
++  ] as const)('%s executes the expected query partition', async (_name, section, calls, fields) => {
++    const result = await getPerformance('website-1', { ...parameters, section }, {});
++
++    const rawQuery = mode === 'prisma' ? prismaRawQuery : clickhouseRawQuery;
++    expect(rawQuery).toHaveBeenCalledTimes(calls);
++    expect(Object.keys(result)).toEqual(fields);
++    const expectedFields = fields as readonly string[];
++    if (expectedFields.includes('chart')) expect(result.chart).toEqual(chartResult);
++    if (expectedFields.includes('summary')) {
++      expect(result.summary?.count).toBe(16);
++      expect(result.summary?.lcp.p50).toBe(1);
++    }
++  });
++});
+diff --git a/src/app/api/reports/performance/route.test.ts b/src/app/api/reports/performance/route.test.ts
+new file mode 100644
+index 0000000..f894cc4
+--- /dev/null
++++ b/src/app/api/reports/performance/route.test.ts
+@@ -0,0 +1,79 @@
++import { beforeEach, describe, expect, test, vi } from 'vitest';
++
++const mocks = vi.hoisted(() => ({
++  parseRequest: vi.fn(),
++  setWebsiteDate: vi.fn(),
++  getQueryFilters: vi.fn(),
++  canViewWebsiteSection: vi.fn(),
++  getPerformance: vi.fn(),
++  getPerformanceMetrics: vi.fn(),
++}));
++
++vi.mock('@/lib/request', () => ({
++  parseRequest: mocks.parseRequest,
++  setWebsiteDate: mocks.setWebsiteDate,
++  getQueryFilters: mocks.getQueryFilters,
++}));
++
++vi.mock('@/permissions', () => ({ canViewWebsiteSection: mocks.canViewWebsiteSection }));
++vi.mock('@/queries/sql/reports/getPerformance', () => ({ getPerformance: mocks.getPerformance }));
++vi.mock('@/queries/sql/reports/getPerformanceMetrics', () => ({ getPerformanceMetrics: mocks.getPerformanceMetrics }));
++vi.mock('@/lib/response', () => ({
++  json: (body: unknown) => new Response(JSON.stringify(body), { status: 200 }),
++  unauthorized: () => new Response(null, { status: 401 }),
++}));
++
++import { POST } from './route';
++
++const parameters = {
++  startDate: new Date('2026-08-01T00:00:00.000Z'),
++  endDate: new Date('2026-08-08T00:00:00.000Z'),
++  unit: 'day',
++  timezone: 'UTC',
++  metric: 'lcp',
++};
++
++beforeEach(() => {
++  vi.clearAllMocks();
++  mocks.parseRequest.mockResolvedValue({
++    auth: { user: { id: 'user-1' } },
++    body: { websiteId: 'website-1', filters: {}, type: 'performance', parameters },
++    error: undefined,
++  });
++  mocks.setWebsiteDate.mockImplementation((_websiteId, data) => data);
++  mocks.getQueryFilters.mockResolvedValue({});
++  mocks.canViewWebsiteSection.mockResolvedValue(true);
++  mocks.getPerformanceMetrics.mockResolvedValue([]);
++});
++
++describe('performance report sections', () => {
++  test('summary returns only the all-metric summary', async () => {
++    const summary = { count: 3 };
++    mocks.parseRequest.mockResolvedValue({
++      auth: { user: { id: 'user-1' } },
++      body: { websiteId: 'website-1', filters: {}, type: 'performance', parameters: { ...parameters, section: 'summary' } },
++      error: undefined,
++    });
++    mocks.getPerformance.mockResolvedValue({ summary });
++
++    const response = await POST(new Request('http://localhost/api/reports/performance', { method: 'POST' }));
++
++    await expect(response.json()).resolves.toEqual({ summary });
++    expect(mocks.getPerformanceMetrics).not.toHaveBeenCalled();
++  });
++
++  test('details returns the legacy detail fields without summary', async () => {
++    mocks.parseRequest.mockResolvedValue({
++      auth: { user: { id: 'user-1' } },
++      body: { websiteId: 'website-1', filters: {}, type: 'performance', parameters: { ...parameters, section: 'details' } },
++      error: undefined,
++    });
++    mocks.getPerformance.mockResolvedValue({ chart: [] });
++
++    const response = await POST(new Request('http://localhost/api/reports/performance', { method: 'POST' }));
++
++    await expect(response.json()).resolves.toEqual({
++      chart: [], pages: [], pageTitles: [], devices: [], browsers: [],
++    });
++  });
++});
+diff --git a/src/components/hooks/queries/usePerformanceQuery.ts b/src/components/hooks/queries/usePerformanceQuery.ts
+new file mode 100644
+index 0000000..8990928
+--- /dev/null
++++ b/src/components/hooks/queries/usePerformanceQuery.ts
+@@ -0,0 +1,95 @@
++import { useQueryClient } from '@tanstack/react-query';
++import { useEffect, useMemo } from 'react';
++import type { ReactQueryOptions } from '@/lib/types';
++import { useApi } from '../useApi';
++import { useDateParameters } from '../useDateParameters';
++import { useFilterParameters } from '../useFilterParameters';
++
++export interface PerformanceQueryScope {
++  websiteId: string;
++  startDate: string;
++  endDate: string;
++  timezone: string;
++  unit: string;
++  filters: Record<string, any>;
++}
++
++type PerformanceQueryPost = (url: string, body: Record<string, any>) => Promise<any>;
++
++function queryKey(scope: PerformanceQueryScope, section: 'summary' | 'details', metric?: string) {
++  const { filters, ...parameters } = scope;
++  return ['reports', { type: 'performance', section, ...parameters, ...filters, ...(metric && { metric }) }];
++}
++
++function request(scope: PerformanceQueryScope, section: 'summary' | 'details', metric?: string) {
++  const { filters, ...parameters } = scope;
++  return {
++    websiteId: scope.websiteId,
++    type: 'performance',
++    filters,
++    parameters: { ...parameters, ...(metric && { metric }), section },
++  };
++}
++
++export function createPerformanceSummaryQueryOptions(scope: PerformanceQueryScope, post: PerformanceQueryPost) {
++  return {
++    queryKey: queryKey(scope, 'summary'),
++    queryFn: () => post('/reports/performance', request(scope, 'summary')),
++  };
++}
++
++export function createPerformanceDetailsQueryOptions(
++  scope: PerformanceQueryScope,
++  metric: string,
++  post: PerformanceQueryPost,
++) {
++  return {
++    queryKey: queryKey(scope, 'details', metric),
++    queryFn: () => post('/reports/performance', request(scope, 'details', metric)),
++  };
++}
++
++export function usePerformanceQuery(
++  {
++    websiteId,
++    startDate,
++    endDate,
++    metric,
++  }: { websiteId: string; startDate: Date; endDate: Date; metric: string },
++  options?: ReactQueryOptions,
++) {
++  const { post, useQuery } = useApi();
++  const queryClient = useQueryClient();
++  const { timezone, unit } = useDateParameters();
++  const filters = useFilterParameters({ includePagination: false });
++  const scope = useMemo(
++    () => ({ websiteId, startDate: startDate.toISOString(), endDate: endDate.toISOString(), timezone, unit, filters }),
++    [websiteId, startDate, endDate, timezone, unit, filters],
++  );
++  const summaryOptions = useMemo(
++    () => createPerformanceSummaryQueryOptions(scope, post),
++    [scope, post],
++  );
++  const detailsOptions = useMemo(
++    () => createPerformanceDetailsQueryOptions(scope, metric, post),
++    [scope, metric, post],
++  );
++  const summaryQuery = useQuery({ ...summaryOptions, enabled: !!websiteId });
++  const detailsQuery = useQuery({ ...detailsOptions, enabled: !!websiteId, ...options });
++
++  useEffect(() => {
++    if (!websiteId) return;
++    void queryClient.fetchQuery(summaryOptions).catch(() => undefined);
++  }, [metric, summaryOptions, queryClient, websiteId]);
++
++  return {
++    ...detailsQuery,
++    data: detailsQuery.data && summaryQuery.data
++      ? { ...detailsQuery.data, summary: summaryQuery.data.summary }
++      : undefined,
++    error: detailsQuery.error || summaryQuery.error,
++    isLoading: detailsQuery.isLoading || summaryQuery.isLoading,
++    isPending: detailsQuery.isPending || summaryQuery.isPending,
++    isFetching: detailsQuery.isFetching || summaryQuery.isFetching,
++  };
++}
+diff --git a/src/components/hooks/queries/usePerformanceQuery.test.ts b/src/components/hooks/queries/usePerformanceQuery.test.ts
+new file mode 100644
+index 0000000..2393c39
+--- /dev/null
++++ b/src/components/hooks/queries/usePerformanceQuery.test.ts
+@@ -0,0 +1,149 @@
++import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
++import { renderHook, waitFor } from '@testing-library/react';
++import { createElement } from 'react';
++import { beforeEach, describe, expect, test, vi } from 'vitest';
++
++const hookMocks = vi.hoisted(() => ({ post: vi.fn(), filters: { country: 'US' } }));
++
++vi.mock('../useApi', async () => {
++  const { useQuery } = await import('@tanstack/react-query');
++  return { useApi: () => ({ post: hookMocks.post, useQuery }) };
++});
++vi.mock('../useDateParameters', () => ({
++  useDateParameters: () => ({ startDate: 'helper-start', endDate: 'helper-end', timezone: 'UTC', unit: 'day' }),
++}));
++vi.mock('../useFilterParameters', () => ({
++  useFilterParameters: () => hookMocks.filters,
++}));
++
++import {
++  createPerformanceDetailsQueryOptions,
++  createPerformanceSummaryQueryOptions,
++  usePerformanceQuery,
++} from './usePerformanceQuery';
++
++const scope = {
++  websiteId: 'website-1',
++  startDate: '2026-08-01T00:00:00.000Z',
++  endDate: '2026-08-08T00:00:00.000Z',
++  timezone: 'UTC',
++  unit: 'day',
++  filters: { country: 'US', search: 'home' },
++};
++const details = { chart: [], pages: [], pageTitles: [], devices: [], browsers: [] };
++const summary = { summary: { count: 3 } };
++
++function setup() {
++  const post = vi.fn().mockImplementation((url: string, body: any) =>
++    Promise.resolve(body.parameters.section === 'summary' ? summary : details),
++  );
++  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: 60_000 } } });
++  return { post, queryClient };
++}
++
++function wrapper(queryClient: QueryClient) {
++  return ({ children }: { children: any }) => createElement(QueryClientProvider, { client: queryClient }, children);
++}
++
++describe('performance query cache partition', () => {
++  beforeEach(() => {
++    vi.useRealTimers();
++    hookMocks.post.mockReset();
++    hookMocks.filters = { country: 'US' };
++  });
++
++  test('uses caller dates instead of helper dates for the request scope', async () => {
++    const { post, queryClient } = setup();
++    hookMocks.post = post;
++    const startDate = new Date('2026-08-02T00:00:00.000Z');
++    const endDate = new Date('2026-08-09T00:00:00.000Z');
++    const { result } = renderHook(
++      () => usePerformanceQuery({ websiteId: 'website-1', startDate, endDate, metric: 'lcp' }),
++      { wrapper: wrapper(queryClient) },
++    );
++
++    await waitFor(() => expect(result.current.data).toEqual({ ...details, ...summary }));
++    const summaryRequest = post.mock.calls.find(([, body]) => body.parameters.section === 'summary');
++    expect(summaryRequest?.[1].parameters).toMatchObject({
++      startDate: startDate.toISOString(), endDate: endDate.toISOString(),
++    });
++  });
++
++  test('reuses one summary when switching metrics in the same scope', async () => {
++    const { post, queryClient } = setup();
++    hookMocks.post = post;
++    const dates = { startDate: new Date(scope.startDate), endDate: new Date(scope.endDate) };
++    const { result, rerender } = renderHook(
++      ({ metric }) => usePerformanceQuery({ websiteId: scope.websiteId, ...dates, metric }),
++      { initialProps: { metric: 'lcp' }, wrapper: wrapper(queryClient) },
++    );
++    await waitFor(() => expect(result.current.data).toEqual({ ...details, ...summary }));
++    rerender({ metric: 'inp' });
++    await waitFor(() => expect(result.current.data).toEqual({ ...details, ...summary }));
++
++    expect(post.mock.calls.filter(([, body]) => body.parameters.section === 'summary')).toHaveLength(1);
++  });
++
++  test('misses the summary cache when date or filters change', async () => {
++    const { post, queryClient } = setup();
++    hookMocks.post = post;
++    const startDate = new Date(scope.startDate);
++    const { rerender } = renderHook(
++      ({ endDate }) => usePerformanceQuery({ websiteId: scope.websiteId, startDate, endDate, metric: 'lcp' }),
++      { initialProps: { endDate: new Date(scope.endDate) }, wrapper: wrapper(queryClient) },
++    );
++    await waitFor(() => expect(post).toHaveBeenCalledTimes(2));
++    rerender({ endDate: new Date('2026-08-09T00:00:00.000Z') });
++    await waitFor(() => expect(post.mock.calls.filter(([, body]) => body.parameters.section === 'summary')).toHaveLength(2));
++    hookMocks.filters = { country: 'GB' };
++    rerender({ endDate: new Date('2026-08-09T00:00:00.000Z') });
++    await waitFor(() => expect(post.mock.calls.filter(([, body]) => body.parameters.section === 'summary')).toHaveLength(3));
++  });
++
++  test('refreshes an expired summary when switching back to a cached metric', async () => {
++    vi.useFakeTimers();
++    const { post, queryClient } = setup();
++    hookMocks.post = post;
++    const dates = { startDate: new Date(scope.startDate), endDate: new Date(scope.endDate) };
++    const { rerender } = renderHook(
++      ({ metric }) => usePerformanceQuery({ websiteId: scope.websiteId, ...dates, metric }),
++      { initialProps: { metric: 'lcp' }, wrapper: wrapper(queryClient) },
++    );
++    await vi.advanceTimersByTimeAsync(1);
++    vi.advanceTimersByTime(59_000);
++    rerender({ metric: 'inp' });
++    await vi.advanceTimersByTimeAsync(1);
++    vi.advanceTimersByTime(2_000);
++    rerender({ metric: 'lcp' });
++    await vi.advanceTimersByTimeAsync(1);
++
++    expect(post.mock.calls.filter(([, body]) => body.parameters.section === 'summary')).toHaveLength(2);
++  });
++
++  test('does not reuse a rejected summary', async () => {
++    const { post, queryClient } = setup();
++    hookMocks.post = post;
++    post.mockImplementation((url: string, body: any) =>
++      body.parameters.section === 'summary' ? Promise.reject(new Error('summary failed')) : Promise.resolve(details),
++    );
++    const dates = { startDate: new Date(scope.startDate), endDate: new Date(scope.endDate) };
++    const { result, rerender } = renderHook(
++      ({ metric }) => usePerformanceQuery({ websiteId: scope.websiteId, ...dates, metric }),
++      { initialProps: { metric: 'lcp' }, wrapper: wrapper(queryClient) },
++    );
++    await waitFor(() => expect(result.current.error?.message).toBe('summary failed'));
++    rerender({ metric: 'inp' });
++    await waitFor(() => expect(post.mock.calls.filter(([, body]) => body.parameters.section === 'summary')).toHaveLength(2));
++  });
++
++  test('builds detail and summary options with separate keys', () => {
++    const post = vi.fn();
++    const summaryOptions = createPerformanceSummaryQueryOptions(scope, post);
++    const lcpOptions = createPerformanceDetailsQueryOptions(scope, 'lcp', post);
++    const inpOptions = createPerformanceDetailsQueryOptions(scope, 'inp', post);
++
++    expect(summaryOptions.queryKey).toEqual(createPerformanceSummaryQueryOptions(scope, post).queryKey);
++    expect(lcpOptions.queryKey).not.toEqual(inpOptions.queryKey);
++    expect(lcpOptions.queryKey).not.toEqual(summaryOptions.queryKey);
++  });
++});
