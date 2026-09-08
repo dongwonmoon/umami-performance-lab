@@ -1,0 +1,2274 @@
+{
+  "scope": "Local synthetic paired-build PostgreSQL Journey experiment; not production traffic",
+  "sources": [
+    {
+      "file": "journey-api-ab-2026-09-08T025704702Z.json",
+      "sha256": "9cc257591b3c834f391be7cc2ee0a58505be27edfed1f89a76047ede168a3c3e",
+      "smoke": true,
+      "status": "complete",
+      "started": "2026-09-08T02:57:04.703Z",
+      "finished": "2026-09-08T02:57:06.381Z"
+    },
+    {
+      "file": "journey-api-ab-2026-09-08T025706457Z.json",
+      "sha256": "d7b32aacc5c6f4a2e27389aadb14933527895ffd6697cd890d0124b2810887e8",
+      "smoke": false,
+      "status": "complete",
+      "started": "2026-09-08T02:57:06.458Z",
+      "finished": "2026-09-08T02:57:43.075Z"
+    }
+  ],
+  "oracle_sha256": "2497dff65bc90f6ed7bbdf831966e2b1d19dd1dd79720a3db763980016640a2e",
+  "upstream_commit": "ca661c7057984aa98ed4f7083d84dae2f65bfcb0",
+  "containers": {
+    "baseline": {
+      "image_id": "sha256:5ec5d7cf04846eb9b7b725b74df893503a31d8fad37eb7984e33c4f231792114",
+      "image": "umami-journey:baseline",
+      "labels": {
+        "upstream": "ca661c7057984aa98ed4f7083d84dae2f65bfcb0",
+        "variant": "baseline"
+      },
+      "cpu_max": "max 100000",
+      "nano_cpus": 0,
+      "cpu_quota": 0,
+      "cpu_period": 0,
+      "memory_bytes": 0
+    },
+    "candidate": {
+      "image_id": "sha256:f6bbd4c3c4b4e6fcb1e6b9ae3d647e9e121fab9764604cc61ca9761f3e5cb8ee",
+      "image": "umami-journey:candidate",
+      "labels": {
+        "upstream": "ca661c7057984aa98ed4f7083d84dae2f65bfcb0",
+        "variant": "distinct-only"
+      },
+      "cpu_max": "max 100000",
+      "nano_cpus": 0,
+      "cpu_quota": 0,
+      "cpu_period": 0,
+      "memory_bytes": 0
+    },
+    "db": {
+      "image_id": "sha256:fe0737ba566a2c5b2a28f34433c0a423261900ec17b9bf7ad115e1aae7e57f1b",
+      "image": "postgres:15-alpine",
+      "labels": {
+        "upstream": null,
+        "variant": null
+      },
+      "cpu_max": "max 100000",
+      "nano_cpus": 0,
+      "cpu_quota": 0,
+      "cpu_period": 0,
+      "memory_bytes": 0
+    }
+  },
+  "qualification": [
+    {
+      "name": "7d-views-3",
+      "parameters": {
+        "startDate": "2026-08-30T15:00:00.000Z",
+        "endDate": "2026-09-06T15:00:00.000Z",
+        "steps": 3,
+        "eventType": 1
+      },
+      "filters": {},
+      "rows": 13,
+      "exact_pair_json_equal": true,
+      "baseline_validation": {
+        "expected_length": 13,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      },
+      "candidate_validation": {
+        "expected_length": 13,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      }
+    },
+    {
+      "name": "7d-views-7",
+      "parameters": {
+        "startDate": "2026-08-30T15:00:00.000Z",
+        "endDate": "2026-09-06T15:00:00.000Z",
+        "steps": 7,
+        "eventType": 1
+      },
+      "filters": {},
+      "rows": 14,
+      "exact_pair_json_equal": true,
+      "baseline_validation": {
+        "expected_length": 14,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      },
+      "candidate_validation": {
+        "expected_length": 14,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      }
+    },
+    {
+      "name": "7d-events-3",
+      "parameters": {
+        "startDate": "2026-08-30T15:00:00.000Z",
+        "endDate": "2026-09-06T15:00:00.000Z",
+        "steps": 3,
+        "eventType": 2
+      },
+      "filters": {},
+      "rows": 54,
+      "exact_pair_json_equal": false,
+      "baseline_validation": {
+        "expected_length": 54,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      },
+      "candidate_validation": {
+        "expected_length": 54,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      }
+    },
+    {
+      "name": "7d-events-7",
+      "parameters": {
+        "startDate": "2026-08-30T15:00:00.000Z",
+        "endDate": "2026-09-06T15:00:00.000Z",
+        "steps": 7,
+        "eventType": 2
+      },
+      "filters": {},
+      "rows": 82,
+      "exact_pair_json_equal": false,
+      "baseline_validation": {
+        "expected_length": 82,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      },
+      "candidate_validation": {
+        "expected_length": 82,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      }
+    },
+    {
+      "name": "7d-all-3",
+      "parameters": {
+        "startDate": "2026-08-30T15:00:00.000Z",
+        "endDate": "2026-09-06T15:00:00.000Z",
+        "steps": 3
+      },
+      "filters": {},
+      "rows": 35,
+      "exact_pair_json_equal": false,
+      "baseline_validation": {
+        "expected_length": 35,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      },
+      "candidate_validation": {
+        "expected_length": 35,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      }
+    },
+    {
+      "name": "7d-all-7",
+      "parameters": {
+        "startDate": "2026-08-30T15:00:00.000Z",
+        "endDate": "2026-09-06T15:00:00.000Z",
+        "steps": 7
+      },
+      "filters": {},
+      "rows": 100,
+      "exact_pair_json_equal": false,
+      "baseline_validation": {
+        "expected_length": 100,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      },
+      "candidate_validation": {
+        "expected_length": 100,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      }
+    },
+    {
+      "name": "30d-all-3",
+      "parameters": {
+        "startDate": "2026-08-07T15:00:00.000Z",
+        "endDate": "2026-09-06T15:00:00.000Z",
+        "steps": 3
+      },
+      "filters": {},
+      "rows": 35,
+      "exact_pair_json_equal": false,
+      "baseline_validation": {
+        "expected_length": 35,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      },
+      "candidate_validation": {
+        "expected_length": 35,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      }
+    },
+    {
+      "name": "181d-views-3",
+      "parameters": {
+        "startDate": "2026-03-09T15:00:00.000Z",
+        "endDate": "2026-09-06T15:00:00.000Z",
+        "steps": 3,
+        "eventType": 1
+      },
+      "filters": {},
+      "rows": 13,
+      "exact_pair_json_equal": true,
+      "baseline_validation": {
+        "expected_length": 13,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      },
+      "candidate_validation": {
+        "expected_length": 13,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      }
+    },
+    {
+      "name": "7d-views-chrome-3",
+      "parameters": {
+        "startDate": "2026-08-30T15:00:00.000Z",
+        "endDate": "2026-09-06T15:00:00.000Z",
+        "steps": 3,
+        "eventType": 1
+      },
+      "filters": {
+        "browser": "eq.Chrome"
+      },
+      "rows": 13,
+      "exact_pair_json_equal": true,
+      "baseline_validation": {
+        "expected_length": 13,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      },
+      "candidate_validation": {
+        "expected_length": 13,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      }
+    },
+    {
+      "name": "7d-views-start-end-3",
+      "parameters": {
+        "startDate": "2026-08-30T15:00:00.000Z",
+        "endDate": "2026-09-06T15:00:00.000Z",
+        "steps": 3,
+        "startStep": "/",
+        "endStep": "/pricing",
+        "eventType": 1
+      },
+      "filters": {},
+      "rows": 1,
+      "exact_pair_json_equal": true,
+      "baseline_validation": {
+        "expected_length": 1,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      },
+      "candidate_validation": {
+        "expected_length": 1,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      }
+    }
+  ],
+  "warmups": [
+    {
+      "target": "baseline",
+      "case": "7d-views-3",
+      "status": 200,
+      "elapsed_ms": 25,
+      "validation": {
+        "expected_length": 13,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      },
+      "exact_json_equal": true
+    },
+    {
+      "target": "candidate",
+      "case": "7d-views-3",
+      "status": 200,
+      "elapsed_ms": 20.5,
+      "validation": {
+        "expected_length": 13,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      },
+      "exact_json_equal": true
+    },
+    {
+      "target": "baseline",
+      "case": "7d-all-7",
+      "status": 200,
+      "elapsed_ms": 33.1,
+      "validation": {
+        "expected_length": 100,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      },
+      "exact_json_equal": true
+    },
+    {
+      "target": "candidate",
+      "case": "7d-all-7",
+      "status": 200,
+      "elapsed_ms": 31.1,
+      "validation": {
+        "expected_length": 100,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      },
+      "exact_json_equal": false
+    },
+    {
+      "target": "baseline",
+      "case": "181d-views-3",
+      "status": 200,
+      "elapsed_ms": 375.3,
+      "validation": {
+        "expected_length": 13,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      },
+      "exact_json_equal": true
+    },
+    {
+      "target": "candidate",
+      "case": "181d-views-3",
+      "status": 200,
+      "elapsed_ms": 273.1,
+      "validation": {
+        "expected_length": 13,
+        "descending_counts": true,
+        "count_vector_equal": true,
+        "row_multiset_subset": true
+      },
+      "exact_json_equal": true
+    }
+  ],
+  "blocks": [
+    {
+      "recorded_at": "2026-09-08T02:57:08.875Z",
+      "kind": "sequential",
+      "round": 1,
+      "target": "baseline",
+      "case": "7d-views-3",
+      "requests": 5,
+      "cpu_usec": 77772,
+      "cpu_usec_per_request": 15554.4,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 27.6,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 27.6,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 26.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 26,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 25.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:09.181Z",
+      "kind": "sequential",
+      "round": 1,
+      "target": "baseline",
+      "case": "7d-all-7",
+      "requests": 5,
+      "cpu_usec": 108216,
+      "cpu_usec_per_request": 21643.2,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 36.2,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 32.9,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 33.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 33,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 30.6,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:11.400Z",
+      "kind": "sequential",
+      "round": 1,
+      "target": "baseline",
+      "case": "181d-views-3",
+      "requests": 5,
+      "cpu_usec": 1901979,
+      "cpu_usec_per_request": 380395.8,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 386.1,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 398.2,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 384.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 383.9,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 401.5,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:11.659Z",
+      "kind": "sequential",
+      "round": 1,
+      "target": "candidate",
+      "case": "7d-views-3",
+      "requests": 5,
+      "cpu_usec": 61248,
+      "cpu_usec_per_request": 12249.6,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 23.2,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 23.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 22.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 20.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 21.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:11.933Z",
+      "kind": "sequential",
+      "round": 1,
+      "target": "candidate",
+      "case": "7d-all-7",
+      "requests": 5,
+      "cpu_usec": 77229,
+      "cpu_usec_per_request": 15445.8,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 28.4,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 30.9,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 25.9,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 25.6,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 24.6,
+          "validation_error": null,
+          "exact_json_equal": false
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:13.520Z",
+      "kind": "sequential",
+      "round": 1,
+      "target": "candidate",
+      "case": "181d-views-3",
+      "requests": 5,
+      "cpu_usec": 1404238,
+      "cpu_usec_per_request": 280847.6,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 273.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 293,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 298.1,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 300.6,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 280.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:13.762Z",
+      "kind": "sequential",
+      "round": 2,
+      "target": "candidate",
+      "case": "7d-views-3",
+      "requests": 5,
+      "cpu_usec": 60357,
+      "cpu_usec_per_request": 12071.4,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 23.1,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 25,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 22.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 23,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 21,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:14.037Z",
+      "kind": "sequential",
+      "round": 2,
+      "target": "candidate",
+      "case": "7d-all-7",
+      "requests": 5,
+      "cpu_usec": 81144,
+      "cpu_usec_per_request": 16228.8,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 31.3,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 28.3,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 26.2,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 25.4,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 24.9,
+          "validation_error": null,
+          "exact_json_equal": false
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:15.566Z",
+      "kind": "sequential",
+      "round": 2,
+      "target": "candidate",
+      "case": "181d-views-3",
+      "requests": 5,
+      "cpu_usec": 1341252,
+      "cpu_usec_per_request": 268250.4,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 288.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 272.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 271.2,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 280.2,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 287.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:15.849Z",
+      "kind": "sequential",
+      "round": 2,
+      "target": "baseline",
+      "case": "7d-views-3",
+      "requests": 5,
+      "cpu_usec": 83642,
+      "cpu_usec_per_request": 16728.4,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 31.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 30.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 26.5,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 29.5,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 25.5,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:16.170Z",
+      "kind": "sequential",
+      "round": 2,
+      "target": "baseline",
+      "case": "7d-all-7",
+      "requests": 5,
+      "cpu_usec": 113590,
+      "cpu_usec_per_request": 22718,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 42.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 35.6,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 35.9,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 33,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 36.1,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:18.230Z",
+      "kind": "sequential",
+      "round": 2,
+      "target": "baseline",
+      "case": "181d-views-3",
+      "requests": 5,
+      "cpu_usec": 1874822,
+      "cpu_usec_per_request": 374964.4,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 388.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 383.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 385.2,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 387.6,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 386.5,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:18.495Z",
+      "kind": "sequential",
+      "round": 3,
+      "target": "baseline",
+      "case": "7d-views-3",
+      "requests": 5,
+      "cpu_usec": 96215,
+      "cpu_usec_per_request": 19243,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 32,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 26.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 23.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 25.9,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 25.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:18.822Z",
+      "kind": "sequential",
+      "round": 3,
+      "target": "baseline",
+      "case": "7d-all-7",
+      "requests": 5,
+      "cpu_usec": 134467,
+      "cpu_usec_per_request": 26893.4,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 32.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 31.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 32.9,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 38.9,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 49.1,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:20.916Z",
+      "kind": "sequential",
+      "round": 3,
+      "target": "baseline",
+      "case": "181d-views-3",
+      "requests": 5,
+      "cpu_usec": 1892719,
+      "cpu_usec_per_request": 378543.8,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 427.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 377.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 385.2,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 376.9,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 385.5,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:21.160Z",
+      "kind": "sequential",
+      "round": 3,
+      "target": "candidate",
+      "case": "7d-views-3",
+      "requests": 5,
+      "cpu_usec": 60199,
+      "cpu_usec_per_request": 12039.8,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 25.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 23.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 22,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 22,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 22.6,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:21.419Z",
+      "kind": "sequential",
+      "round": 3,
+      "target": "candidate",
+      "case": "7d-all-7",
+      "requests": 5,
+      "cpu_usec": 75666,
+      "cpu_usec_per_request": 15133.2,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 26.5,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 24.8,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 24,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 23.8,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 23.9,
+          "validation_error": null,
+          "exact_json_equal": false
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:22.943Z",
+      "kind": "sequential",
+      "round": 3,
+      "target": "candidate",
+      "case": "181d-views-3",
+      "requests": 5,
+      "cpu_usec": 1341324,
+      "cpu_usec_per_request": 268264.8,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 276.2,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 288.9,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 271,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 269.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 287.6,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:23.182Z",
+      "kind": "sequential",
+      "round": 4,
+      "target": "candidate",
+      "case": "7d-views-3",
+      "requests": 5,
+      "cpu_usec": 60237,
+      "cpu_usec_per_request": 12047.4,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 24.6,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 20.2,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 22.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 21.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 22.5,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:23.433Z",
+      "kind": "sequential",
+      "round": 4,
+      "target": "candidate",
+      "case": "7d-all-7",
+      "requests": 5,
+      "cpu_usec": 92982,
+      "cpu_usec_per_request": 18596.4,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 25.9,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 24.4,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 25,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 24.7,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 24.6,
+          "validation_error": null,
+          "exact_json_equal": false
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:25.068Z",
+      "kind": "sequential",
+      "round": 4,
+      "target": "candidate",
+      "case": "181d-views-3",
+      "requests": 5,
+      "cpu_usec": 1440996,
+      "cpu_usec_per_request": 288199.2,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 292.5,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 303.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 322.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 285.5,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 300.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:25.339Z",
+      "kind": "sequential",
+      "round": 4,
+      "target": "baseline",
+      "case": "7d-views-3",
+      "requests": 5,
+      "cpu_usec": 79393,
+      "cpu_usec_per_request": 15878.6,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 26.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 26.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 26.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 26.1,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 25.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:25.645Z",
+      "kind": "sequential",
+      "round": 4,
+      "target": "baseline",
+      "case": "7d-all-7",
+      "requests": 5,
+      "cpu_usec": 108483,
+      "cpu_usec_per_request": 21696.6,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 33.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 34.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 29.9,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 35.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 31.6,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:27.933Z",
+      "kind": "sequential",
+      "round": 4,
+      "target": "baseline",
+      "case": "181d-views-3",
+      "requests": 5,
+      "cpu_usec": 2100601,
+      "cpu_usec_per_request": 420120.2,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 393.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 397.1,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 389.1,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 470.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 507.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:28.257Z",
+      "kind": "sequential",
+      "round": 5,
+      "target": "baseline",
+      "case": "7d-views-3",
+      "requests": 5,
+      "cpu_usec": 97097,
+      "cpu_usec_per_request": 19419.4,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 38.1,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 32.2,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 33.6,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 30.1,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 37.1,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:28.604Z",
+      "kind": "sequential",
+      "round": 5,
+      "target": "baseline",
+      "case": "7d-all-7",
+      "requests": 5,
+      "cpu_usec": 161086,
+      "cpu_usec_per_request": 32217.2,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 41,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 44.9,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 34.9,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 40,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 53.9,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:30.849Z",
+      "kind": "sequential",
+      "round": 5,
+      "target": "baseline",
+      "case": "181d-views-3",
+      "requests": 5,
+      "cpu_usec": 2062986,
+      "cpu_usec_per_request": 412597.2,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 452.5,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 429.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 399.1,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 426.5,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 412,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:31.094Z",
+      "kind": "sequential",
+      "round": 5,
+      "target": "candidate",
+      "case": "7d-views-3",
+      "requests": 5,
+      "cpu_usec": 61983,
+      "cpu_usec_per_request": 12396.6,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 24.6,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 22.2,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 22.2,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 23.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 21.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:31.370Z",
+      "kind": "sequential",
+      "round": 5,
+      "target": "candidate",
+      "case": "7d-all-7",
+      "requests": 5,
+      "cpu_usec": 76652,
+      "cpu_usec_per_request": 15330.4,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 27.2,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 26.4,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 26,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 27.8,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 25.9,
+          "validation_error": null,
+          "exact_json_equal": false
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:32.893Z",
+      "kind": "sequential",
+      "round": 5,
+      "target": "candidate",
+      "case": "181d-views-3",
+      "requests": 5,
+      "cpu_usec": 1327951,
+      "cpu_usec_per_request": 265590.2,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 275.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 295.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 282.1,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 265.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 270.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:33.125Z",
+      "kind": "sequential",
+      "round": 6,
+      "target": "candidate",
+      "case": "7d-views-3",
+      "requests": 5,
+      "cpu_usec": 59425,
+      "cpu_usec_per_request": 11885,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 23,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 21.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 21.5,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 20.6,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 21,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:33.400Z",
+      "kind": "sequential",
+      "round": 6,
+      "target": "candidate",
+      "case": "7d-all-7",
+      "requests": 5,
+      "cpu_usec": 80325,
+      "cpu_usec_per_request": 16065,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 25.3,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 26.1,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 28.7,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 31.9,
+          "validation_error": null,
+          "exact_json_equal": false
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 24.8,
+          "validation_error": null,
+          "exact_json_equal": false
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:34.998Z",
+      "kind": "sequential",
+      "round": 6,
+      "target": "candidate",
+      "case": "181d-views-3",
+      "requests": 5,
+      "cpu_usec": 1409604,
+      "cpu_usec_per_request": 281920.8,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 312.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 301.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 296,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 267,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 287.9,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:35.261Z",
+      "kind": "sequential",
+      "round": 6,
+      "target": "baseline",
+      "case": "7d-views-3",
+      "requests": 5,
+      "cpu_usec": 79277,
+      "cpu_usec_per_request": 15855.4,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 27.2,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 24.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 26.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 24.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 24.2,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:35.569Z",
+      "kind": "sequential",
+      "round": 6,
+      "target": "baseline",
+      "case": "7d-all-7",
+      "requests": 5,
+      "cpu_usec": 112716,
+      "cpu_usec_per_request": 22543.2,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 33,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 34,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 33.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 32,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 34.1,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:37.717Z",
+      "kind": "sequential",
+      "round": 6,
+      "target": "baseline",
+      "case": "181d-views-3",
+      "requests": 5,
+      "cpu_usec": 1971345,
+      "cpu_usec_per_request": 394269,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 413.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 399.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 404.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 402.1,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 405.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:38.684Z",
+      "kind": "contention",
+      "round": 1,
+      "target": "baseline",
+      "case": "181d-views-3",
+      "concurrency": 4,
+      "requests": 8,
+      "elapsed_ms": 848.4,
+      "cpu_usec": 3025691,
+      "cpu_usec_per_request": 378211.4,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 424.6,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 368.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 455.6,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 390.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 464.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 375.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 465.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 382.1,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:39.469Z",
+      "kind": "contention",
+      "round": 1,
+      "target": "candidate",
+      "case": "181d-views-3",
+      "concurrency": 4,
+      "requests": 8,
+      "elapsed_ms": 654.9,
+      "cpu_usec": 2289968,
+      "cpu_usec_per_request": 286246,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 316.9,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 337.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 316,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 337.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 295.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 311,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 314.9,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 337.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:40.399Z",
+      "kind": "contention",
+      "round": 2,
+      "target": "candidate",
+      "case": "181d-views-3",
+      "concurrency": 4,
+      "requests": 8,
+      "elapsed_ms": 802.5,
+      "cpu_usec": 2642202,
+      "cpu_usec_per_request": 330275.3,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 457.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 344,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 442.2,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 356.9,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 438.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 360.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 440,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 361.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:41.418Z",
+      "kind": "contention",
+      "round": 2,
+      "target": "baseline",
+      "case": "181d-views-3",
+      "concurrency": 4,
+      "requests": 8,
+      "elapsed_ms": 902.4,
+      "cpu_usec": 3231129,
+      "cpu_usec_per_request": 403891.1,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 424.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 464.5,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 434.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 467.5,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 432.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 468.5,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 433.5,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 465.9,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:42.400Z",
+      "kind": "contention",
+      "round": 3,
+      "target": "baseline",
+      "case": "181d-views-3",
+      "concurrency": 4,
+      "requests": 8,
+      "elapsed_ms": 854.1,
+      "cpu_usec": 3003146,
+      "cpu_usec_per_request": 375393.3,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 442.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 369.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 453.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 372.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 453.2,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 400.3,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 452.5,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 395.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    },
+    {
+      "recorded_at": "2026-09-08T02:57:43.073Z",
+      "kind": "contention",
+      "round": 3,
+      "target": "candidate",
+      "case": "181d-views-3",
+      "concurrency": 4,
+      "requests": 8,
+      "elapsed_ms": 561.8,
+      "cpu_usec": 1916345,
+      "cpu_usec_per_request": 239543.1,
+      "samples": [
+        {
+          "status": 200,
+          "elapsed_ms": 299.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 260.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 298.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 262.4,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 297.8,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 262.7,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 300,
+          "validation_error": null,
+          "exact_json_equal": true
+        },
+        {
+          "status": 200,
+          "elapsed_ms": 260,
+          "validation_error": null,
+          "exact_json_equal": true
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

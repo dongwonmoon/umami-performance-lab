@@ -1,0 +1,12 @@
+diff --git a/src/queries/sql/reports/getJourney.ts b/src/queries/sql/reports/getJourney.ts
+--- a/src/queries/sql/reports/getJourney.ts
++++ b/src/queries/sql/reports/getJourney.ts
+@@ -116,7 +116,7 @@
+   return rawQuery(
+     `
+     WITH events AS (
+-      select distinct
++      select
+           website_event.visit_id,
+           website_event.referrer_path,
+           coalesce(nullIf(website_event.event_name, ''), website_event.url_path) "event",

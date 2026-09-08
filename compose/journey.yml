@@ -1,0 +1,40 @@
+# Separate comparison apps; share the existing disposable qualification DB.
+name: umami-journey
+x-app: &app
+  command: [node, server.js] # Do not run migrations against the reference DB.
+  init: true
+  environment:
+    DATABASE_URL: postgresql://umami:umami@db:5432/umami
+    APP_SECRET: disposable-journey-comparison-only
+    TWO_FACTOR_ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+  networks: [qualification]
+  healthcheck:
+    test: [CMD, curl, -fsS, http://localhost:3000/api/heartbeat]
+    interval: 3s
+    timeout: 5s
+    retries: 40
+services:
+  baseline:
+    <<: *app
+    image: umami-journey:baseline
+    container_name: umami-journey-baseline
+    build:
+      context: ${JOURNEY_BUILD_ROOT:?Set the prepared build root}/baseline
+      labels:
+        lab.upstream: ca661c7057984aa98ed4f7083d84dae2f65bfcb0
+        lab.variant: baseline
+    ports: ["127.0.0.1:3007:3000"]
+  candidate:
+    <<: *app
+    image: umami-journey:candidate
+    container_name: umami-journey-candidate
+    build:
+      context: ${JOURNEY_BUILD_ROOT:?Set the prepared build root}/candidate
+      labels:
+        lab.upstream: ca661c7057984aa98ed4f7083d84dae2f65bfcb0
+        lab.variant: distinct-only
+    ports: ["127.0.0.1:3008:3000"]
+networks:
+  qualification:
+    external: true
+    name: umami-qualification_default
