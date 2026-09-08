@@ -1,0 +1,1443 @@
+{
+  "scope": "Local synthetic PG15/v3.3.1 visitor-list comparison. No event exports, response bodies or authentication tokens. Timed equality records are runner assertions, not retained bodies.",
+  "runs": [
+    {
+      "source": ".local/visitor-api-ab-2026-09-08T051241727Z.json",
+      "sha256": "cb5fc2dbef9a7107835dd61c3b4426d2cf735dcc1f7239c492ff9131e8e56c40",
+      "status": "complete",
+      "recorded_at": "2026-09-08T05:12:41.728Z",
+      "smoke": true,
+      "concurrent": false,
+      "upstream_commit": "ca661c7057984aa98ed4f7083d84dae2f65bfcb0",
+      "containers": {
+        "baseline": {
+          "image_id": "sha256:01d69c5f0c91a6beec9c24026c0681713f21931a326538369a62b1c3961b5ff6",
+          "image": "umami-visitor:baseline",
+          "labels": {
+            "upstream": "ca661c7057984aa98ed4f7083d84dae2f65bfcb0",
+            "variant": "baseline"
+          },
+          "cpu_max": "max 100000",
+          "nano_cpus": 0,
+          "cpu_quota": 0,
+          "cpu_period": 0,
+          "memory_bytes": 0
+        },
+        "candidate": {
+          "image_id": "sha256:6b76e9cc7c0ac122881a762078d9319bee3b31f79bab885baa6b98a9a7731a73",
+          "image": "umami-visitor:candidate",
+          "labels": {
+            "upstream": "ca661c7057984aa98ed4f7083d84dae2f65bfcb0",
+            "variant": "count-order-only"
+          },
+          "cpu_max": "max 100000",
+          "nano_cpus": 0,
+          "cpu_quota": 0,
+          "cpu_period": 0,
+          "memory_bytes": 0
+        },
+        "db": {
+          "image_id": "sha256:fe0737ba566a2c5b2a28f34433c0a423261900ec17b9bf7ad115e1aae7e57f1b",
+          "image": "postgres:15-alpine",
+          "labels": {
+            "upstream": null,
+            "variant": null
+          },
+          "cpu_max": "max 100000",
+          "nano_cpus": 0,
+          "cpu_quota": 0,
+          "cpu_period": 0,
+          "memory_bytes": 0
+        }
+      },
+      "errors": [],
+      "cases": [
+        {
+          "name": "empty",
+          "request": {
+            "name": "empty",
+            "start": "2020-01-01T00:00:00.000Z",
+            "end": "2020-01-02T00:00:00.000Z",
+            "page": 1,
+            "pageSize": 20
+          },
+          "baseline": {
+            "status": 200,
+            "elapsed_ms": 58.4,
+            "exact_json_equal": null,
+            "validation_error": null
+          },
+          "candidate": {
+            "status": 200,
+            "elapsed_ms": 60,
+            "exact_json_equal": true,
+            "validation_error": null
+          },
+          "baseline_shape": {
+            "count": 0,
+            "page": 1,
+            "pageSize": 20,
+            "isCapped": false,
+            "rows": 0
+          }
+        },
+        {
+          "name": "7d-cap10000",
+          "request": {
+            "name": "7d-cap10000",
+            "days": 7,
+            "maxResults": 10000,
+            "start": "2026-08-30T15:00:00.000Z",
+            "end": "2026-09-06T15:00:00.000Z",
+            "page": 1,
+            "pageSize": 20
+          },
+          "baseline": {
+            "status": 200,
+            "elapsed_ms": 99.8,
+            "exact_json_equal": null,
+            "validation_error": null
+          },
+          "candidate": {
+            "status": 200,
+            "elapsed_ms": 81,
+            "exact_json_equal": true,
+            "validation_error": null
+          },
+          "baseline_shape": {
+            "count": 3403,
+            "page": 1,
+            "pageSize": 20,
+            "isCapped": false,
+            "rows": 20
+          }
+        },
+        {
+          "name": "30d-cap10000",
+          "request": {
+            "name": "30d-cap10000",
+            "days": 30,
+            "maxResults": 10000,
+            "start": "2026-08-07T15:00:00.000Z",
+            "end": "2026-09-06T15:00:00.000Z",
+            "page": 1,
+            "pageSize": 20
+          },
+          "baseline": {
+            "status": 200,
+            "elapsed_ms": 156.2,
+            "exact_json_equal": null,
+            "validation_error": null
+          },
+          "candidate": {
+            "status": 200,
+            "elapsed_ms": 145.6,
+            "exact_json_equal": true,
+            "validation_error": null
+          },
+          "baseline_shape": {
+            "count": 10000,
+            "page": 1,
+            "pageSize": 20,
+            "isCapped": true,
+            "rows": 20
+          }
+        },
+        {
+          "name": "181d-cap10000",
+          "request": {
+            "name": "181d-cap10000",
+            "days": 181,
+            "maxResults": 10000,
+            "start": "2026-03-09T15:00:00.000Z",
+            "end": "2026-09-06T15:00:00.000Z",
+            "page": 1,
+            "pageSize": 20
+          },
+          "baseline": {
+            "status": 200,
+            "elapsed_ms": 988.7,
+            "exact_json_equal": null,
+            "validation_error": null
+          },
+          "candidate": {
+            "status": 200,
+            "elapsed_ms": 541.2,
+            "exact_json_equal": true,
+            "validation_error": null
+          },
+          "baseline_shape": {
+            "count": 10000,
+            "page": 1,
+            "pageSize": 20,
+            "isCapped": true,
+            "rows": 20
+          }
+        },
+        {
+          "name": "7d-chrome",
+          "request": {
+            "name": "7d-chrome",
+            "days": 7,
+            "browser": "eq.Chrome",
+            "start": "2026-08-30T15:00:00.000Z",
+            "end": "2026-09-06T15:00:00.000Z",
+            "page": 1,
+            "pageSize": 20
+          },
+          "baseline": {
+            "status": 200,
+            "elapsed_ms": 69,
+            "exact_json_equal": null,
+            "validation_error": null
+          },
+          "candidate": {
+            "status": 200,
+            "elapsed_ms": 72.6,
+            "exact_json_equal": true,
+            "validation_error": null
+          },
+          "baseline_shape": {
+            "count": 1990,
+            "page": 1,
+            "pageSize": 20,
+            "isCapped": false,
+            "rows": 20
+          }
+        },
+        {
+          "name": "7d-page2",
+          "request": {
+            "name": "7d-page2",
+            "days": 7,
+            "page": 2,
+            "start": "2026-08-30T15:00:00.000Z",
+            "end": "2026-09-06T15:00:00.000Z",
+            "pageSize": 20
+          },
+          "baseline": {
+            "status": 200,
+            "elapsed_ms": 93.6,
+            "exact_json_equal": null,
+            "validation_error": null
+          },
+          "candidate": {
+            "status": 200,
+            "elapsed_ms": 79.6,
+            "exact_json_equal": true,
+            "validation_error": null
+          },
+          "baseline_shape": {
+            "count": 3403,
+            "page": 2,
+            "pageSize": 20,
+            "isCapped": false,
+            "rows": 20
+          }
+        }
+      ],
+      "warmups": [],
+      "blocks": []
+    },
+    {
+      "source": ".local/visitor-api-ab-2026-09-08T051245738Z.json",
+      "sha256": "4c0f871c7afbd4a36522bd9a74e612b910a932c9eba981a21a4456c81f014f6f",
+      "status": "complete",
+      "recorded_at": "2026-09-08T05:12:45.739Z",
+      "smoke": false,
+      "concurrent": false,
+      "upstream_commit": "ca661c7057984aa98ed4f7083d84dae2f65bfcb0",
+      "containers": {
+        "baseline": {
+          "image_id": "sha256:01d69c5f0c91a6beec9c24026c0681713f21931a326538369a62b1c3961b5ff6",
+          "image": "umami-visitor:baseline",
+          "labels": {
+            "upstream": "ca661c7057984aa98ed4f7083d84dae2f65bfcb0",
+            "variant": "baseline"
+          },
+          "cpu_max": "max 100000",
+          "nano_cpus": 0,
+          "cpu_quota": 0,
+          "cpu_period": 0,
+          "memory_bytes": 0
+        },
+        "candidate": {
+          "image_id": "sha256:6b76e9cc7c0ac122881a762078d9319bee3b31f79bab885baa6b98a9a7731a73",
+          "image": "umami-visitor:candidate",
+          "labels": {
+            "upstream": "ca661c7057984aa98ed4f7083d84dae2f65bfcb0",
+            "variant": "count-order-only"
+          },
+          "cpu_max": "max 100000",
+          "nano_cpus": 0,
+          "cpu_quota": 0,
+          "cpu_period": 0,
+          "memory_bytes": 0
+        },
+        "db": {
+          "image_id": "sha256:fe0737ba566a2c5b2a28f34433c0a423261900ec17b9bf7ad115e1aae7e57f1b",
+          "image": "postgres:15-alpine",
+          "labels": {
+            "upstream": null,
+            "variant": null
+          },
+          "cpu_max": "max 100000",
+          "nano_cpus": 0,
+          "cpu_quota": 0,
+          "cpu_period": 0,
+          "memory_bytes": 0
+        }
+      },
+      "errors": [],
+      "cases": [
+        {
+          "name": "empty",
+          "request": {
+            "name": "empty",
+            "start": "2020-01-01T00:00:00.000Z",
+            "end": "2020-01-02T00:00:00.000Z",
+            "page": 1,
+            "pageSize": 20
+          },
+          "baseline": {
+            "status": 200,
+            "elapsed_ms": 17,
+            "exact_json_equal": null,
+            "validation_error": null
+          },
+          "candidate": {
+            "status": 200,
+            "elapsed_ms": 15.7,
+            "exact_json_equal": true,
+            "validation_error": null
+          },
+          "baseline_shape": {
+            "count": 0,
+            "page": 1,
+            "pageSize": 20,
+            "isCapped": false,
+            "rows": 0
+          }
+        },
+        {
+          "name": "7d-cap10000",
+          "request": {
+            "name": "7d-cap10000",
+            "days": 7,
+            "maxResults": 10000,
+            "start": "2026-08-30T15:00:00.000Z",
+            "end": "2026-09-06T15:00:00.000Z",
+            "page": 1,
+            "pageSize": 20
+          },
+          "baseline": {
+            "status": 200,
+            "elapsed_ms": 73.3,
+            "exact_json_equal": null,
+            "validation_error": null
+          },
+          "candidate": {
+            "status": 200,
+            "elapsed_ms": 68.8,
+            "exact_json_equal": true,
+            "validation_error": null
+          },
+          "baseline_shape": {
+            "count": 3403,
+            "page": 1,
+            "pageSize": 20,
+            "isCapped": false,
+            "rows": 20
+          }
+        },
+        {
+          "name": "30d-cap10000",
+          "request": {
+            "name": "30d-cap10000",
+            "days": 30,
+            "maxResults": 10000,
+            "start": "2026-08-07T15:00:00.000Z",
+            "end": "2026-09-06T15:00:00.000Z",
+            "page": 1,
+            "pageSize": 20
+          },
+          "baseline": {
+            "status": 200,
+            "elapsed_ms": 141.8,
+            "exact_json_equal": null,
+            "validation_error": null
+          },
+          "candidate": {
+            "status": 200,
+            "elapsed_ms": 135.6,
+            "exact_json_equal": true,
+            "validation_error": null
+          },
+          "baseline_shape": {
+            "count": 10000,
+            "page": 1,
+            "pageSize": 20,
+            "isCapped": true,
+            "rows": 20
+          }
+        },
+        {
+          "name": "181d-cap10000",
+          "request": {
+            "name": "181d-cap10000",
+            "days": 181,
+            "maxResults": 10000,
+            "start": "2026-03-09T15:00:00.000Z",
+            "end": "2026-09-06T15:00:00.000Z",
+            "page": 1,
+            "pageSize": 20
+          },
+          "baseline": {
+            "status": 200,
+            "elapsed_ms": 887.5,
+            "exact_json_equal": null,
+            "validation_error": null
+          },
+          "candidate": {
+            "status": 200,
+            "elapsed_ms": 518.6,
+            "exact_json_equal": true,
+            "validation_error": null
+          },
+          "baseline_shape": {
+            "count": 10000,
+            "page": 1,
+            "pageSize": 20,
+            "isCapped": true,
+            "rows": 20
+          }
+        },
+        {
+          "name": "7d-chrome",
+          "request": {
+            "name": "7d-chrome",
+            "days": 7,
+            "browser": "eq.Chrome",
+            "start": "2026-08-30T15:00:00.000Z",
+            "end": "2026-09-06T15:00:00.000Z",
+            "page": 1,
+            "pageSize": 20
+          },
+          "baseline": {
+            "status": 200,
+            "elapsed_ms": 62.2,
+            "exact_json_equal": null,
+            "validation_error": null
+          },
+          "candidate": {
+            "status": 200,
+            "elapsed_ms": 63.2,
+            "exact_json_equal": true,
+            "validation_error": null
+          },
+          "baseline_shape": {
+            "count": 1990,
+            "page": 1,
+            "pageSize": 20,
+            "isCapped": false,
+            "rows": 20
+          }
+        },
+        {
+          "name": "7d-page2",
+          "request": {
+            "name": "7d-page2",
+            "days": 7,
+            "page": 2,
+            "start": "2026-08-30T15:00:00.000Z",
+            "end": "2026-09-06T15:00:00.000Z",
+            "pageSize": 20
+          },
+          "baseline": {
+            "status": 200,
+            "elapsed_ms": 74.1,
+            "exact_json_equal": null,
+            "validation_error": null
+          },
+          "candidate": {
+            "status": 200,
+            "elapsed_ms": 69.9,
+            "exact_json_equal": true,
+            "validation_error": null
+          },
+          "baseline_shape": {
+            "count": 3403,
+            "page": 2,
+            "pageSize": 20,
+            "isCapped": false,
+            "rows": 20
+          }
+        }
+      ],
+      "warmups": [
+        {
+          "target": "baseline",
+          "case": "7d-cap10000",
+          "sample": {
+            "status": 200,
+            "elapsed_ms": 80.2,
+            "exact_json_equal": true,
+            "validation_error": null
+          }
+        },
+        {
+          "target": "candidate",
+          "case": "7d-cap10000",
+          "sample": {
+            "status": 200,
+            "elapsed_ms": 72.8,
+            "exact_json_equal": true,
+            "validation_error": null
+          }
+        },
+        {
+          "target": "baseline",
+          "case": "30d-cap10000",
+          "sample": {
+            "status": 200,
+            "elapsed_ms": 146.9,
+            "exact_json_equal": true,
+            "validation_error": null
+          }
+        },
+        {
+          "target": "candidate",
+          "case": "30d-cap10000",
+          "sample": {
+            "status": 200,
+            "elapsed_ms": 132.5,
+            "exact_json_equal": true,
+            "validation_error": null
+          }
+        },
+        {
+          "target": "baseline",
+          "case": "181d-cap10000",
+          "sample": {
+            "status": 200,
+            "elapsed_ms": 907.5,
+            "exact_json_equal": true,
+            "validation_error": null
+          }
+        },
+        {
+          "target": "candidate",
+          "case": "181d-cap10000",
+          "sample": {
+            "status": 200,
+            "elapsed_ms": 529.3,
+            "exact_json_equal": true,
+            "validation_error": null
+          }
+        }
+      ],
+      "blocks": [
+        {
+          "recorded_at": "2026-09-08T05:12:50.671Z",
+          "kind": "sequential",
+          "round": 1,
+          "target": "baseline",
+          "case": "7d-cap10000",
+          "requests": 3,
+          "completed_requests": 3,
+          "cpu_usec": 183742,
+          "cpu_usec_per_request": 61247.3,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 73,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 69.4,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 85,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:12:51.232Z",
+          "kind": "sequential",
+          "round": 1,
+          "target": "baseline",
+          "case": "30d-cap10000",
+          "requests": 3,
+          "completed_requests": 3,
+          "cpu_usec": 501210,
+          "cpu_usec_per_request": 167070,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 145.1,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 135.7,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 140.5,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:12:54.137Z",
+          "kind": "sequential",
+          "round": 1,
+          "target": "baseline",
+          "case": "181d-cap10000",
+          "requests": 3,
+          "completed_requests": 3,
+          "cpu_usec": 2758030,
+          "cpu_usec_per_request": 919343.3,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 939,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 931.3,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 910.1,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:12:54.483Z",
+          "kind": "sequential",
+          "round": 1,
+          "target": "candidate",
+          "case": "7d-cap10000",
+          "requests": 3,
+          "completed_requests": 3,
+          "cpu_usec": 173352,
+          "cpu_usec_per_request": 57784,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 75,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 72.9,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 68.5,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:12:54.995Z",
+          "kind": "sequential",
+          "round": 1,
+          "target": "candidate",
+          "case": "30d-cap10000",
+          "requests": 3,
+          "completed_requests": 3,
+          "cpu_usec": 468113,
+          "cpu_usec_per_request": 156037.7,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 131.8,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 129.7,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 125,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:12:56.745Z",
+          "kind": "sequential",
+          "round": 1,
+          "target": "candidate",
+          "case": "181d-cap10000",
+          "requests": 3,
+          "completed_requests": 3,
+          "cpu_usec": 1580571,
+          "cpu_usec_per_request": 526857,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 527.3,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 562.9,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 527.1,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:12:57.096Z",
+          "kind": "sequential",
+          "round": 2,
+          "target": "candidate",
+          "case": "7d-cap10000",
+          "requests": 3,
+          "completed_requests": 3,
+          "cpu_usec": 185075,
+          "cpu_usec_per_request": 61691.7,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 72.1,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 77.6,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 68.8,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:12:57.649Z",
+          "kind": "sequential",
+          "round": 2,
+          "target": "candidate",
+          "case": "30d-cap10000",
+          "requests": 3,
+          "completed_requests": 3,
+          "cpu_usec": 509525,
+          "cpu_usec_per_request": 169841.7,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 139.4,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 128.1,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 153.6,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:12:59.833Z",
+          "kind": "sequential",
+          "round": 2,
+          "target": "candidate",
+          "case": "181d-cap10000",
+          "requests": 3,
+          "completed_requests": 3,
+          "cpu_usec": 2018534,
+          "cpu_usec_per_request": 672844.7,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 810.2,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 697.4,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 539.4,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:13:00.192Z",
+          "kind": "sequential",
+          "round": 2,
+          "target": "baseline",
+          "case": "7d-cap10000",
+          "requests": 3,
+          "completed_requests": 3,
+          "cpu_usec": 183608,
+          "cpu_usec_per_request": 61202.7,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 77.1,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 77.2,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 72.5,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:13:00.741Z",
+          "kind": "sequential",
+          "round": 2,
+          "target": "baseline",
+          "case": "30d-cap10000",
+          "requests": 3,
+          "completed_requests": 3,
+          "cpu_usec": 500041,
+          "cpu_usec_per_request": 166680.3,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 141.7,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 134.5,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 139.4,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:13:03.637Z",
+          "kind": "sequential",
+          "round": 2,
+          "target": "baseline",
+          "case": "181d-cap10000",
+          "requests": 3,
+          "completed_requests": 3,
+          "cpu_usec": 2724970,
+          "cpu_usec_per_request": 908323.3,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 897.1,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 950,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 901,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:13:03.991Z",
+          "kind": "sequential",
+          "round": 3,
+          "target": "baseline",
+          "case": "7d-cap10000",
+          "requests": 3,
+          "completed_requests": 3,
+          "cpu_usec": 189592,
+          "cpu_usec_per_request": 63197.3,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 76.3,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 74.9,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 70,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:13:04.564Z",
+          "kind": "sequential",
+          "round": 3,
+          "target": "baseline",
+          "case": "30d-cap10000",
+          "requests": 3,
+          "completed_requests": 3,
+          "cpu_usec": 529282,
+          "cpu_usec_per_request": 176427.3,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 141.8,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 157.7,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 146.4,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:13:07.604Z",
+          "kind": "sequential",
+          "round": 3,
+          "target": "baseline",
+          "case": "181d-cap10000",
+          "requests": 3,
+          "completed_requests": 3,
+          "cpu_usec": 2879319,
+          "cpu_usec_per_request": 959773,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 923.3,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 1051,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 941.5,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:13:07.954Z",
+          "kind": "sequential",
+          "round": 3,
+          "target": "candidate",
+          "case": "7d-cap10000",
+          "requests": 3,
+          "completed_requests": 3,
+          "cpu_usec": 182049,
+          "cpu_usec_per_request": 60683,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 76.2,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 71,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 72.2,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:13:08.483Z",
+          "kind": "sequential",
+          "round": 3,
+          "target": "candidate",
+          "case": "30d-cap10000",
+          "requests": 3,
+          "completed_requests": 3,
+          "cpu_usec": 503161,
+          "cpu_usec_per_request": 167720.3,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 142.5,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 135.2,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 126.4,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:13:10.232Z",
+          "kind": "sequential",
+          "round": 3,
+          "target": "candidate",
+          "case": "181d-cap10000",
+          "requests": 3,
+          "completed_requests": 3,
+          "cpu_usec": 1591522,
+          "cpu_usec_per_request": 530507.3,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 550.2,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 562.4,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 516.8,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source": ".local/visitor-api-ab-2026-09-08T052108526Z.json",
+      "sha256": "44f69333da66a22f189513b0eb3ffc778c24282e0fe1f7d6902c71bfd87078b0",
+      "status": "complete",
+      "recorded_at": "2026-09-08T05:21:08.526Z",
+      "smoke": false,
+      "concurrent": true,
+      "upstream_commit": "ca661c7057984aa98ed4f7083d84dae2f65bfcb0",
+      "containers": {
+        "baseline": {
+          "image_id": "sha256:01d69c5f0c91a6beec9c24026c0681713f21931a326538369a62b1c3961b5ff6",
+          "image": "umami-visitor:baseline",
+          "labels": {
+            "upstream": "ca661c7057984aa98ed4f7083d84dae2f65bfcb0",
+            "variant": "baseline"
+          },
+          "cpu_max": "max 100000",
+          "nano_cpus": 0,
+          "cpu_quota": 0,
+          "cpu_period": 0,
+          "memory_bytes": 0
+        },
+        "candidate": {
+          "image_id": "sha256:6b76e9cc7c0ac122881a762078d9319bee3b31f79bab885baa6b98a9a7731a73",
+          "image": "umami-visitor:candidate",
+          "labels": {
+            "upstream": "ca661c7057984aa98ed4f7083d84dae2f65bfcb0",
+            "variant": "count-order-only"
+          },
+          "cpu_max": "max 100000",
+          "nano_cpus": 0,
+          "cpu_quota": 0,
+          "cpu_period": 0,
+          "memory_bytes": 0
+        },
+        "db": {
+          "image_id": "sha256:fe0737ba566a2c5b2a28f34433c0a423261900ec17b9bf7ad115e1aae7e57f1b",
+          "image": "postgres:15-alpine",
+          "labels": {
+            "upstream": null,
+            "variant": null
+          },
+          "cpu_max": "max 100000",
+          "nano_cpus": 0,
+          "cpu_quota": 0,
+          "cpu_period": 0,
+          "memory_bytes": 0
+        }
+      },
+      "errors": [],
+      "cases": [
+        {
+          "name": "181d-cap10000",
+          "request": {
+            "name": "181d-cap10000",
+            "days": 181,
+            "maxResults": 10000,
+            "start": "2026-03-09T15:00:00.000Z",
+            "end": "2026-09-06T15:00:00.000Z",
+            "page": 1,
+            "pageSize": 20
+          },
+          "baseline": {
+            "status": 200,
+            "elapsed_ms": 1098.9,
+            "exact_json_equal": null,
+            "validation_error": null
+          },
+          "candidate": {
+            "status": 200,
+            "elapsed_ms": 619.4,
+            "exact_json_equal": true,
+            "validation_error": null
+          },
+          "baseline_shape": {
+            "count": 10000,
+            "page": 1,
+            "pageSize": 20,
+            "isCapped": true,
+            "rows": 20
+          }
+        }
+      ],
+      "warmups": [
+        {
+          "target": "baseline",
+          "case": "181d-cap10000",
+          "sample": {
+            "status": 200,
+            "elapsed_ms": 929.6,
+            "exact_json_equal": true,
+            "validation_error": null
+          }
+        },
+        {
+          "target": "candidate",
+          "case": "181d-cap10000",
+          "sample": {
+            "status": 200,
+            "elapsed_ms": 598.9,
+            "exact_json_equal": true,
+            "validation_error": null
+          }
+        }
+      ],
+      "blocks": [
+        {
+          "recorded_at": "2026-09-08T05:21:13.734Z",
+          "kind": "concurrent",
+          "concurrency": 4,
+          "elapsed_ms": 909.8,
+          "round": 1,
+          "target": "baseline",
+          "case": "181d-cap10000",
+          "requests": 4,
+          "completed_requests": 4,
+          "cpu_usec": 3364485,
+          "cpu_usec_per_request": 841121.3,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 840.7,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 909.1,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 908.1,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 907.2,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:21:14.388Z",
+          "kind": "concurrent",
+          "concurrency": 4,
+          "elapsed_ms": 535.8,
+          "round": 1,
+          "target": "candidate",
+          "case": "181d-cap10000",
+          "requests": 4,
+          "completed_requests": 4,
+          "cpu_usec": 1962015,
+          "cpu_usec_per_request": 490503.8,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 534.7,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 534.6,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 535,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 534.6,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:21:15.018Z",
+          "kind": "concurrent",
+          "concurrency": 4,
+          "elapsed_ms": 515.4,
+          "round": 2,
+          "target": "candidate",
+          "case": "181d-cap10000",
+          "requests": 4,
+          "completed_requests": 4,
+          "cpu_usec": 1883493,
+          "cpu_usec_per_request": 470873.3,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 514.8,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 514.9,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 513.8,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 512.8,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:21:16.029Z",
+          "kind": "concurrent",
+          "concurrency": 4,
+          "elapsed_ms": 897,
+          "round": 2,
+          "target": "baseline",
+          "case": "181d-cap10000",
+          "requests": 4,
+          "completed_requests": 4,
+          "cpu_usec": 3420787,
+          "cpu_usec_per_request": 855196.8,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 896.9,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 894.5,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 895.5,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 894.8,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:21:17.143Z",
+          "kind": "concurrent",
+          "concurrency": 4,
+          "elapsed_ms": 976.9,
+          "round": 3,
+          "target": "baseline",
+          "case": "181d-cap10000",
+          "requests": 4,
+          "completed_requests": 4,
+          "cpu_usec": 3701296,
+          "cpu_usec_per_request": 925324,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 975.2,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 974.1,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 975.5,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 976.2,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        },
+        {
+          "recorded_at": "2026-09-08T05:21:17.922Z",
+          "kind": "concurrent",
+          "concurrency": 4,
+          "elapsed_ms": 653,
+          "round": 3,
+          "target": "candidate",
+          "case": "181d-cap10000",
+          "requests": 4,
+          "completed_requests": 4,
+          "cpu_usec": 2220046,
+          "cpu_usec_per_request": 555011.5,
+          "samples": [
+            {
+              "status": 200,
+              "elapsed_ms": 611.3,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 611.8,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 610,
+              "exact_json_equal": true,
+              "validation_error": null
+            },
+            {
+              "status": 200,
+              "elapsed_ms": 652.3,
+              "exact_json_equal": true,
+              "validation_error": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

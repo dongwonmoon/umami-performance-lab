@@ -1,0 +1,40 @@
+# Separate comparison apps; share the existing disposable qualification DB.
+name: umami-visitor
+x-app: &app
+  command: [node, server.js]
+  init: true
+  environment:
+    DATABASE_URL: postgresql://umami:umami@db:5432/umami
+    APP_SECRET: disposable-visitor-comparison-only
+    TWO_FACTOR_ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+  networks: [qualification]
+  healthcheck:
+    test: [CMD, curl, -fsS, http://localhost:3000/api/heartbeat]
+    interval: 3s
+    timeout: 5s
+    retries: 40
+services:
+  baseline:
+    <<: *app
+    image: umami-visitor:baseline
+    container_name: umami-visitor-baseline
+    build:
+      context: ${VISITOR_BUILD_ROOT:?Set the prepared build root}/baseline
+      labels:
+        lab.upstream: ca661c7057984aa98ed4f7083d84dae2f65bfcb0
+        lab.variant: baseline
+    ports: ["127.0.0.1:3009:3000"]
+  candidate:
+    <<: *app
+    image: umami-visitor:candidate
+    container_name: umami-visitor-candidate
+    build:
+      context: ${VISITOR_BUILD_ROOT:?Set the prepared build root}/candidate
+      labels:
+        lab.upstream: ca661c7057984aa98ed4f7083d84dae2f65bfcb0
+        lab.variant: count-order-only
+    ports: ["127.0.0.1:3010:3000"]
+networks:
+  qualification:
+    external: true
+    name: umami-qualification_default

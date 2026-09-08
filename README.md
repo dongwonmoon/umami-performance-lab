@@ -54,6 +54,17 @@ PostgreSQL 쿼리의 `DISTINCT` 한 단어를 제거한 로컬 비교에서,
 [공개 측정 근거](evidence/2026-09-08/journey-comparison.json)를 보존했다.
 실제 운영 배포나 upstream 제출은 하지 않았다.
 
+## 네 번째 사례: 방문자 목록의 불필요한 개수 정렬
+
+목록 조회에 필요한 최근 방문순 정렬이 개수 계산에도 따라가는 경로를 분리했다.
+181일 조회의 로컬 production-build API는 931.3→550.2ms, 요청당 DB CPU는 약 42% 감소했다.
+동시 요청 4개에서도 전체 완료 시간은 909.8→535.8ms로 줄었고, 결과 동일성 검사를 통과했다.
+7·30일에서는 의미 있는 개선을 주장하지 않는다. 고정 합성 데이터의 작은 비교 실험이다.
+
+[원인·검증·한계](experiments/visitor-count-order.md),
+[공개 측정 근거](evidence/2026-09-08/visitor-comparison.json),
+[패치와 회귀 테스트](patches/visitor-count-order.patch)를 보존했다.
+
 ## 구성과 실행 경계
 
 Umami 소스와 실행 환경은 별도 checkout으로 유지한다. 저장소에는 새 앱,
