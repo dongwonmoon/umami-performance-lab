@@ -1,0 +1,364 @@
+{
+  "scope": "Local synthetic lifecycle probes, not production traffic or Umami database persistence",
+  "upstream": "9fb7bacee62c34d6d05312d063a37c20d581de23",
+  "patch": "patches/tracker-navigation-dispatch.patch",
+  "cases": [
+    {
+      "experiment": "navigation-delivery-results",
+      "browser": "HeadlessChrome/152.0.0.0 macOS",
+      "responseDelayMs": 1500,
+      "preflightDelayMs": 0,
+      "hookDelayMs": 1000,
+      "samples": [
+        {
+          "run": "1788945016397-0-original-none",
+          "variant": "original",
+          "hook": "none",
+          "departureMs": 1528.6000000238419,
+          "received": 1
+        },
+        {
+          "run": "1788945020851-0-immediate-none",
+          "variant": "immediate",
+          "hook": "none",
+          "departureMs": 7.899999976158142,
+          "received": 1
+        },
+        {
+          "run": "1788945023737-0-original-async",
+          "variant": "original",
+          "hook": "async",
+          "departureMs": 2515.5,
+          "received": 1
+        },
+        {
+          "run": "1788945029144-0-immediate-async",
+          "variant": "immediate",
+          "hook": "async",
+          "departureMs": 6.100000023841858,
+          "received": 0
+        },
+        {
+          "run": "1788945032036-1-immediate-none",
+          "variant": "immediate",
+          "hook": "none",
+          "departureMs": 14.300000071525574,
+          "received": 1
+        },
+        {
+          "run": "1788945034941-1-original-none",
+          "variant": "original",
+          "hook": "none",
+          "departureMs": 1518.4000000953674,
+          "received": 1
+        },
+        {
+          "run": "1788945039347-1-immediate-async",
+          "variant": "immediate",
+          "hook": "async",
+          "departureMs": 7.600000023841858,
+          "received": 0
+        },
+        {
+          "run": "1788945042252-1-original-async",
+          "variant": "original",
+          "hook": "async",
+          "departureMs": 2517.2999999523163,
+          "received": 1
+        }
+      ]
+    },
+    {
+      "experiment": "navigation-dispatch-results",
+      "browser": "HeadlessChrome/152.0.0.0 macOS",
+      "responseDelayMs": 1500,
+      "preflightDelayMs": 0,
+      "hookDelayMs": 1000,
+      "baselineBundleSha256": "6b6872b98094ef2e3d62625402dec1d5203a0a98d20ba8b17ba2fc17ad933361",
+      "candidateBundleSha256": "ae4f69c4fd6ac60321a3eac4144feaa07c5f162caf13e9d891429aa571472cac",
+      "samples": [
+        {
+          "run": "1788946907829-0-baseline-none",
+          "variant": "baseline",
+          "hook": "none",
+          "departureMs": 1520,
+          "received": 1
+        },
+        {
+          "run": "1788946912257-0-dispatch-none",
+          "variant": "dispatch",
+          "hook": "none",
+          "departureMs": 12.700000047683716,
+          "received": 1
+        },
+        {
+          "run": "1788946915159-0-baseline-async",
+          "variant": "baseline",
+          "hook": "async",
+          "departureMs": 2541,
+          "received": 1
+        },
+        {
+          "run": "1788946920617-0-dispatch-async",
+          "variant": "dispatch",
+          "hook": "async",
+          "departureMs": 1020.3000000715256,
+          "received": 1
+        },
+        {
+          "run": "1788946924542-1-dispatch-none",
+          "variant": "dispatch",
+          "hook": "none",
+          "departureMs": 9.200000047683716,
+          "received": 1
+        },
+        {
+          "run": "1788946927442-1-baseline-none",
+          "variant": "baseline",
+          "hook": "none",
+          "departureMs": 1514.2999999523163,
+          "received": 1
+        },
+        {
+          "run": "1788946931866-1-dispatch-async",
+          "variant": "dispatch",
+          "hook": "async",
+          "departureMs": 1014.2000000476837,
+          "received": 1
+        },
+        {
+          "run": "1788946935779-1-baseline-async",
+          "variant": "baseline",
+          "hook": "async",
+          "departureMs": 2522.5,
+          "received": 1
+        }
+      ]
+    },
+    {
+      "experiment": "navigation-cross-origin-results",
+      "browser": "HeadlessChrome/152.0.0.0 macOS",
+      "responseDelayMs": 1500,
+      "preflightDelayMs": 500,
+      "hookDelayMs": 1000,
+      "samples": [
+        {
+          "run": "1788947301608-0-baseline-none",
+          "variant": "baseline",
+          "hook": "none",
+          "departureMs": 2027.7999999523163,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788947306930-0-dispatch-none",
+          "variant": "dispatch",
+          "hook": "none",
+          "departureMs": 6.100000023841858,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788947310223-0-baseline-async",
+          "variant": "baseline",
+          "hook": "async",
+          "departureMs": 3016.600000023842,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788947316533-0-dispatch-async",
+          "variant": "dispatch",
+          "hook": "async",
+          "departureMs": 1013.7999999523163,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788947320833-1-dispatch-none",
+          "variant": "dispatch",
+          "hook": "none",
+          "departureMs": 5.600000023841858,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788947324122-1-baseline-none",
+          "variant": "baseline",
+          "hook": "none",
+          "departureMs": 2016.2999999523163,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788947329440-1-dispatch-async",
+          "variant": "dispatch",
+          "hook": "async",
+          "departureMs": 1015.3999999761581,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788947333752-1-baseline-async",
+          "variant": "baseline",
+          "hook": "async",
+          "departureMs": 3019.399999976158,
+          "received": 1,
+          "preflights": 1
+        }
+      ]
+    },
+    {
+      "experiment": "navigation-cross-origin-firefox-results",
+      "browser": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:155.0) Gecko/20100101 Firefox/155.0",
+      "responseDelayMs": 1500,
+      "preflightDelayMs": 500,
+      "hookDelayMs": 1000,
+      "samples": [
+        {
+          "run": "1788948178006-0-baseline-none",
+          "variant": "baseline",
+          "hook": "none",
+          "departureMs": 2026,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788948183369-0-dispatch-none",
+          "variant": "dispatch",
+          "hook": "none",
+          "departureMs": 5,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788948186685-0-baseline-async",
+          "variant": "baseline",
+          "hook": "async",
+          "departureMs": 3021,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788948193025-0-dispatch-async",
+          "variant": "dispatch",
+          "hook": "async",
+          "departureMs": 1017,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788948197363-1-dispatch-none",
+          "variant": "dispatch",
+          "hook": "none",
+          "departureMs": 5,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788948200687-1-baseline-none",
+          "variant": "baseline",
+          "hook": "none",
+          "departureMs": 2020,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788948206032-1-dispatch-async",
+          "variant": "dispatch",
+          "hook": "async",
+          "departureMs": 1019,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788948210371-1-baseline-async",
+          "variant": "baseline",
+          "hook": "async",
+          "departureMs": 3022,
+          "received": 1,
+          "preflights": 1
+        }
+      ]
+    },
+    {
+      "experiment": "navigation-cross-origin-webkit-results",
+      "browser": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Safari/605.1.15",
+      "responseDelayMs": 1500,
+      "preflightDelayMs": 500,
+      "hookDelayMs": 1000,
+      "samples": [
+        {
+          "run": "1788948187489-0-baseline-none",
+          "variant": "baseline",
+          "hook": "none",
+          "departureMs": 2020,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788948192806-0-dispatch-none",
+          "variant": "dispatch",
+          "hook": "none",
+          "departureMs": 7,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788948196107-0-baseline-async",
+          "variant": "baseline",
+          "hook": "async",
+          "departureMs": 3019,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788948202423-0-dispatch-async",
+          "variant": "dispatch",
+          "hook": "async",
+          "departureMs": 1010,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788948206726-1-dispatch-none",
+          "variant": "dispatch",
+          "hook": "none",
+          "departureMs": 5,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788948210020-1-baseline-none",
+          "variant": "baseline",
+          "hook": "none",
+          "departureMs": 2018,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788948215329-1-dispatch-async",
+          "variant": "dispatch",
+          "hook": "async",
+          "departureMs": 1011,
+          "received": 1,
+          "preflights": 1
+        },
+        {
+          "run": "1788948219625-1-baseline-async",
+          "variant": "baseline",
+          "hook": "async",
+          "departureMs": 3015,
+          "received": 1,
+          "preflights": 1
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Two repeats per condition; timing is click-to-pagehide, not destination rendering.",
+    "Immediate navigation rejected because async beforeSend events did not arrive within observation window.",
+    "Playwright WebKit is not installed Safari or iOS Safari.",
+    "Loopback HTTP and small payloads; no production delivery-rate, HTTPS deployment, or old-browser claim."
+  ]
+}

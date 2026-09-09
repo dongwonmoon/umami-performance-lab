@@ -68,13 +68,26 @@ PostgreSQL 쿼리의 `DISTINCT` 한 단어를 제거한 로컬 비교에서,
 [공개 측정 근거](evidence/2026-09-08/visitor-comparison.json),
 [패치와 회귀 테스트](patches/visitor-count-order.patch)를 보존했다.
 
+## 추가 사례: 추적 링크 이동과 분석 응답의 분리
+
+추가 사례로 **분석 서버의 응답 지연이 추적 링크의 페이지 이동을 막는 경로**를 검증했다.
+전송 준비는 기다리고 응답은 기다리지 않는 후보를 만들었다. 로컬 CORS 사전 요청
+0.5초·응답 1.5초 조건에서 Chromium/Firefox/WebKit의 기본 링크 이동은 약 2초에서
+5–7ms로 줄었고, 브라우저별 8개 비교 이벤트가 모두 수신기에 도착했다.
+실제 운영 지연·무손실 전송·Umami DB 저장을 증명한 것은 아니다. 후보는 미제출이다.
+
+- [과정·기각한 안·검증 범위](experiments/tracker-navigation.md)
+- [소스 패치](patches/tracker-navigation-dispatch.patch), [회귀 검사](scripts/tracker-navigation-check.mjs)
+- [공개 가능한 합성 측정 표본](evidence/2026-09-09/tracker-navigation.json)
+
 ## 구성과 실행 경계
 
 Umami 소스와 실행 환경은 별도 checkout으로 유지한다. 저장소에는 새 앱,
 프레임워크, CI/CD 또는 모니터링 스택을 추가하지 않았다.
 
-실험은 `v3.3.1`의 `ca661c7057984aa98ed4f7083d84dae2f65bfcb0`에 고정되어
-있다. patch는 해당 checkout에서 `git apply --check` 후 적용한다.
+초기 퍼널 실험은 `v3.3.1`의 `ca661c7057984aa98ed4f7083d84dae2f65bfcb0`에
+고정되어 있다. 후속 실험의 기준 커밋은 각 기록을 따른다. patch는 해당 checkout에서
+`git apply --check` 후 적용한다.
 스크립트는 Node 내장 기능과 upstream에 이미 설치된 `tsx`/Prisma를 사용한다.
 구체적인 명령과 전제는 실험 기록에 있다.
 
@@ -84,9 +97,9 @@ DB는 공개하지 않으며, 새 실험에서는 자신의 고정 데이터와 
 `evidence/`에는 원본 이벤트·DB·인증 토큰이 아닌 합성 데이터의 집계 응답,
 측정 표본과 실행 계획만 보존했다. 새 출력은 무시되는 `.local/`에 기록한다.
 
-이 사례는 현재 검증 범위에서 마무리했다. Umami 수정은 재현용 패치로 보존하며
-실행 중인 공식 앱을 교체하거나 upstream에 제출하지 않았다. 실제 적용이나 upstream
-제안을 추진할 때 다른 데이터 분포의 검증 필요성을 다시 판단한다.
+Umami 수정은 재현용 패치로 보존하며 실행 중인 공식 앱을 교체하지 않는다.
+upstream 제출·병합 여부는 각 사례 기록을 따른다. 실제 적용이나 upstream 제안을
+추진할 때 추가 검증 필요성을 다시 판단한다.
 
 패치와 SQL 실행 계획에 포함된 upstream 코드 발췌의 저작권 및 MIT 조건은
 [Umami 라이선스](third_party/umami-LICENSE)에 있다.
