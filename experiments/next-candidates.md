@@ -454,3 +454,52 @@ notes. Other unrelated application processes were not stopped.
 
 The complete collection-path investigation, rejected immediate-navigation variant,
 dispatch-only candidate and verification record moved to [tracker-navigation.md](tracker-navigation.md).
+
+### Website reset/delete screening — 2026-09-09
+
+Read-only source inspection against dev `9fb7bace` (the existing verification
+archive; visitor-count patch is unrelated). No app or DB was started, no website
+was reset/deleted, and no browser UI execution or deletion benchmark was performed.
+
+UI source `WebsiteData.tsx`, `WebsiteResetForm.tsx`, and `WebsiteDeleteForm.tsx`
+offers full reset and website deletion, guarded by typed RESET/DELETE confirmation.
+The corresponding POST reset/DELETE routes check update/delete permissions and await
+the operation. This is UI-code evidence, not a live walkthrough. A date-range purge
+was not found in these settings/routes. Official [API documentation](https://docs.umami.is/docs/api/websites)
+describes reset/delete; [FAQ](https://docs.umami.is/docs/faq) says self-hosted data
+is retained indefinitely unless manually deleted. Building retention scheduling
+would be new functionality, not a proven fix.
+
+`src/queries/prisma/website.ts:20-74,207-283` deletes dependents before events and
+sessions in a single interactive transaction, timeout 30s. Reset preserves the
+website/configuration and updates resetAt; deletion also removes reports, segments,
+annotations and shares, then the website (soft deletion in cloud mode). Redis
+updates happen after the transaction in cloud mode. `prisma/schema.prisma:7-10`
+uses relationMode=prisma: do not assume database FK cascades provide cleanup.
+
+The two-pass event-data deletion is intentional defensive cleanup for mismatched
+denormalized website IDs. Existing [issue #4435](https://github.com/umami-software/umami/issues/4435)
+is closed/fixed-in-dev; do not rediscover that failure as new or remove its safety
+pass as redundant work. A large transaction/30s timeout is not evidence of an
+observed timeout, lock incident or poor throughput.
+
+Fresh focused check in `/private/tmp/umami-visitor-pr-check.dOV9fg`:
+`node_modules/.bin/vitest run src/queries/prisma/website.test.ts src/permissions/website.test.ts`
+passed 51 tests in 1.19s. Tests mock DB transactions; they verify call order and
+permission behavior, not real rollback, concurrent ingestion or deletion speed.
+
+More concrete follow-up hypothesis: an already-open tracked page can continue
+using its cache token after an administrator resets the website. The reset deletes
+session rows. `src/app/api/send/route.ts:109-179` skips website lookup when a cache
+websiteId exists and skips session creation when a cached sessionId matches the
+recomputed ID. `saveEvent.ts:108` then creates the event; visitor-list SQL joins
+events to session rows (`getWebsiteSessions.ts:60`). This could leave post-reset
+events without the expected session context. It is a source-supported hypothesis,
+not an observed orphan/event loss or an established production-frequency claim.
+The narrow duplicate search did not establish novelty.
+
+Next qualification, if continued: a new disposable website/session, one normal
+send to obtain its token, reset, then one cached send and a fresh-token control.
+Inspect HTTP outcomes and persisted event/session linkage. No race injection,
+large dataset, retention job, retry queue, or existing benchmark data required.
+Do not select a fix until actual API/DB behavior is observed.
