@@ -1,7 +1,8 @@
 # Visitor-list count ordering optimization
 
 Closed bounded local case: preserve visitor-list results while removing ordering
-from capped count work. No upstream submission or running-service replacement.
+from capped count work. Submitted as [PR #4523](https://github.com/umami-software/umami/pull/4523)
+on 2026-09-08; not merged or deployed as part of this work.
 
 - Sequential 181d API: 931.3 → 550.2ms; DB CPU/request: 919.34 → 530.51ms.
 - Four concurrent requests: 909.8 → 535.8ms completion; CPU/request: 855.20 → 490.50ms.
@@ -307,3 +308,120 @@ this bounded local case and preserve it; do not expand into another bottleneck
 or capacity study. Limits remain: one fixed synthetic distribution, three paired
 bursts, no production traffic or write overlap, and validator flags rather than
 saved full timed response bodies. No upstream acceptance claim.
+
+### Development-branch port check — 2026-09-08
+
+The same narrow change was ported without changing the historical qualification
+checkout, to
+the live `dev` commit
+`9fb7bacee62c34d6d05312d063a37c20d581de23` (current at preparation time). A
+clean detached archive is retained at
+`/private/tmp/umami-visitor-dev-9fb7bace`; the generated patch is
+[`patches/visitor-count-order-dev.patch`](../patches/visitor-count-order-dev.patch).
+
+The development branch already includes `max(website_event.created_at) desc,
+session.session_id` for visitor pages. The port removes that ordering only from
+the capped count wrapper and passes the complete expression as the trusted
+page-only default. Focused regression tests retain the uncapped/capped,
+explicit-order override and legacy no-order cases while checking both ordering
+terms appear only on the page query, with unchanged count, cap, page offset and
+omitted `orderBy` metadata. `git diff --check`, Biome formatting on the three
+changed upstream files, and `vitest run src/lib/prisma.test.ts` passed (7 tests);
+the local Biome check still reports unrelated pre-existing formatting in
+`src/lib/prisma.ts`, which was left untouched to keep the port minimal.
+
+No build, service start, database write, benchmark, commit, push or upstream
+submission was performed. The test uses the qualification checkout's existing
+dependencies and generated client only; it does not establish API or runtime
+compatibility for the development branch.
+
+### Development-branch pre-PR verification — 2026-09-08
+
+Verification used the patched archive
+`/private/tmp/umami-visitor-dev-9fb7bace` at the same dev SHA and a clean
+unpatched archive at `/private/tmp/umami-visitor-dev-applycheck.lCKVZ3`.
+
+- `pnpm exec vitest run src/lib/prisma.test.ts src/lib/sort.test.ts`: patched
+  **12 passed**; clean **9 passed**. The three-test increase is the ported
+  default-order coverage (uncapped/capped, explicit override and legacy
+  no-order behavior).
+- `pnpm exec biome lint` on the three changed files passed in both archives.
+- Full `pnpm lint` failed identically in both archives: one existing error in
+  `src/app/not-found.tsx`, 14 warnings, and a configuration-schema notice
+  because the reused Biome CLI is 2.5.5 while the checkout schema is 2.3.6.
+  This is baseline lint debt, not a diagnostic introduced by the port.
+- The reused dependency tree is not a lockfile match: `pnpm` is 10.34.1 while
+  the Dockerfile pins 11.21.0; requested/installed versions include Vitest
+  `^4.1.11`/`4.1.10`, Biome `^2.5.11`/`2.5.5`, and tsx `^4.23.13`/`4.23.1`.
+  The dev and qualification lockfiles also differ in several dependency
+  ranges and workspace entries. The scratch test symlinks
+  `node_modules` and `src/generated` to the qualification checkout; these
+  symlinks are test-only and must not be used as a build artifact.
+
+For the user-run clean install/build, use a separate checkout without the
+test-only dependency symlinks. Pin pnpm to the upstream Dockerfile version.
+`SKIP_DB_CHECK=1` skips both database connection checks and migrations;
+the dummy URL is only for client generation. This verifies the build, not DB
+migration or runtime compatibility. Do not use the historical Compose labels.
+
+```sh
+(
+  set -eu
+  set -o pipefail
+  VISITOR_VERIFY_DIR=$(mktemp -d /private/tmp/umami-visitor-pr-check.XXXXXX)
+  echo "Verification checkout: $VISITOR_VERIFY_DIR"
+  git -C /private/tmp/umami-visitor-dev-9fb7bace archive 9fb7bacee62c34d6d05312d063a37c20d581de23 | tar -x -C "$VISITOR_VERIFY_DIR"
+  cd "$VISITOR_VERIFY_DIR"
+  git init -q
+  git apply --check /Users/dongwon/workspace/umami-performance-lab/patches/visitor-count-order-dev.patch
+  git apply /Users/dongwon/workspace/umami-performance-lab/patches/visitor-count-order-dev.patch
+  export DATABASE_URL=postgresql://user:pass@127.0.0.1:1/dummy
+  export SKIP_DB_CHECK=1
+  npx --yes pnpm@11.21.0 install --frozen-lockfile
+  npx --yes pnpm@11.21.0 build 2>&1 | tee build-verification.log
+  npx --yes pnpm@11.21.0 exec vitest run src/lib/prisma.test.ts src/lib/sort.test.ts 2>&1 | tee tests-verification.log
+  npx --yes pnpm@11.21.0 lint 2>&1 | tee lint-verification.log
+)
+```
+
+At this preparation checkpoint, these commands had not been executed; the later
+clean-verification section records the completed run. A build/install failure
+stops the sequence and must be inspected before claiming readiness. If full
+lint still fails, compare against the same clean revision and dependency set
+without the patch before attributing it to upstream. No service is started.
+
+Preparation correction: local cloning failed before installation because the
+source is a promisor partial clone (`blob:none`) and upload-pack could not fetch
+a missing object. This does not establish repository corruption. Exporting the
+pinned tree with `git archive` succeeded; a fresh archive at
+`/private/tmp/umami-visitor-pr-check.dOV9fg` was extracted and the dev patch
+apply-check/application succeeded. No dependencies or build have been run there.
+The command above now exports only the pinned tree instead of cloning history.
+
+### Clean verification and upstream submission — 2026-09-08
+
+User ran the isolated build at `/private/tmp/umami-visitor-pr-check.dOV9fg`.
+Main inspected build/test/lint logs: build completed with DB checks/migrations
+skipped and upstream type checking disabled; focused tests passed 12/12.
+Changed-file lint passed with fresh Biome 2.5.11. Full lint reported 6 errors
+and 14 warnings; the same binary on unpatched dev reproduced these totals.
+Errors concern the unchanged not-found page and five SVG assets. These limits
+are disclosed in the submitted body; no current-dev performance claim is made.
+
+User authorized submission. Fork `dongwonmoon/umami`, branch
+`codex/visitor-count-order`, commit `1ee36860`, targets upstream `dev` at
+`9fb7bacee62c34d6d05312d063a37c20d581de23`.
+[PR #4523](https://github.com/umami-software/umami/pull/4523) contains only
+`src/lib/prisma.ts`, `src/lib/prisma.test.ts` and
+`src/queries/sql/sessions/getWebsiteSessions.ts`. Submission is not acceptance.
+
+Evidence-link correction: the original PR link referenced local-only `98c6fef`
+and returned 404. Published only this case's eight evidence/reproduction files
+on lab branch `evidence/visitor-count-order`, commit
+`be6c814d72e0f4aea8475308a3fdefa383437b15`, and updated the PR body to that
+public immutable link. GitHub contents API confirmed the document is accessible.
+Unrelated local experiments and working-tree edits were not published in that
+evidence-only commit. Subsequent lab main commits preserve the remaining records.
+
+Supporting records: [pre-submission audit](upstream-contribution-check.md) and
+[submitted PR text with archived checklist](visitor-count-order-pr-draft.md).

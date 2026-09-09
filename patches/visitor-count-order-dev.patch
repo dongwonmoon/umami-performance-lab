@@ -1,0 +1,113 @@
+diff --git a/src/lib/prisma.test.ts b/src/lib/prisma.test.ts
+index 3a8e9df2..cbb417be 100644
+--- a/src/lib/prisma.test.ts
++++ b/src/lib/prisma.test.ts
+@@ -24,9 +24,10 @@ vi.mock('@/generated/prisma/client', () => ({
+ }));
+ 
+ let getRawQueryClient!: typeof import('./prisma').getRawQueryClient;
++let prisma!: typeof import('./prisma').default;
+ 
+ beforeAll(async () => {
+-  ({ getRawQueryClient } = await import('./prisma'));
++  ({ getRawQueryClient, default: prisma } = await import('./prisma'));
+ });
+ 
+ interface RawQueryClient {
+@@ -80,3 +81,58 @@ describe('getRawQueryClient', () => {
+     expect(getRawQueryClient(client, { write: true })).toBe(client);
+   });
+ });
++
++describe('pagedRawQuery default ordering', () => {
++  function mockQueries(count = '4') {
++    const queryRaw = vi.mocked((prisma.client as any).$queryRawUnsafe);
++    queryRaw.mockClear();
++    queryRaw.mockImplementation(async (sql: string) =>
++      sql.includes('count(*) as num') ? [{ num: count }] : [{ id: 1 }],
++    );
++    return queryRaw;
++  }
++
++  test.each([undefined, 5])(
++    'applies trusted default order only to the page query with cap %s',
++    async maxResults => {
++      const queryRaw = mockQueries('5');
++      const result = await prisma.pagedRawQuery(
++        'select * from thing',
++        {},
++        { page: 2, pageSize: 2, maxResults },
++        'test',
++        'max(created_at) desc, session_id',
++      );
++
++      expect(queryRaw).toHaveBeenCalledTimes(2);
++      expect(queryRaw.mock.calls[0][0]).not.toContain('order by max(created_at) desc');
++      expect(queryRaw.mock.calls[1][0]).toContain('order by max(created_at) desc, session_id');
++      expect(queryRaw.mock.calls[1][0]).toContain('limit 2 offset 2');
++      expect(result).toEqual({
++        data: [{ id: 1 }],
++        count: 5,
++        page: 2,
++        pageSize: 2,
++        isCapped: !!maxResults,
++        orderBy: undefined,
++      });
++    },
++  );
++
++  test('keeps explicit ordering and legacy no-order behavior', async () => {
++    const queryRaw = mockQueries();
++    const result = await prisma.pagedRawQuery(
++      'select * from thing',
++      {},
++      { page: 1, pageSize: 2, orderBy: 'name', sortDescending: true },
++      undefined,
++      'max(created_at) desc, session_id',
++    );
++    expect(queryRaw.mock.calls[1][0]).toContain('order by name desc');
++    expect(queryRaw.mock.calls[1][0]).not.toContain('order by max(created_at) desc, session_id');
++    expect(result.orderBy).toBe('name');
++    queryRaw.mockClear();
++    await prisma.pagedRawQuery('select * from thing', {}, { page: 1, pageSize: 2 });
++    expect(queryRaw.mock.calls[1][0]).not.toMatch(/order by/);
++  });
++});
+diff --git a/src/lib/prisma.ts b/src/lib/prisma.ts
+index 2a09c6ad..11dc2a18 100644
+--- a/src/lib/prisma.ts
++++ b/src/lib/prisma.ts
+@@ -786,6 +786,7 @@ async function pagedRawQuery(
+   queryParams: Record<string, any>,
+   filters: QueryFilters,
+   name?: string,
++  defaultOrderBy?: string,
+ ) {
+   const { page = 1, pageSize, orderBy, sortDescending = false } = filters;
+   const size = +pageSize || DEFAULT_PAGE_SIZE;
+@@ -793,7 +794,7 @@ async function pagedRawQuery(
+   const direction = sortDescending ? 'desc' : 'asc';
+ 
+   const statements = [
+-    orderBy && `order by ${orderBy} ${direction}`,
++    orderBy ? `order by ${orderBy} ${direction}` : defaultOrderBy && `order by ${defaultOrderBy}`,
+     +size > 0 && `limit ${+size} offset ${offset}`,
+   ]
+     .filter(n => n)
+diff --git a/src/queries/sql/sessions/getWebsiteSessions.ts b/src/queries/sql/sessions/getWebsiteSessions.ts
+index 67d8f732..541b69be 100644
+--- a/src/queries/sql/sessions/getWebsiteSessions.ts
++++ b/src/queries/sql/sessions/getWebsiteSessions.ts
+@@ -75,11 +75,11 @@ async function relationalQuery(websiteId: string, filters: QueryFilters) {
+       session.country, 
+       session.region, 
+       session.city
+-    order by max(website_event.created_at) desc, session.session_id
+     `,
+     queryParams,
+     filters,
+     FUNCTION_NAME,
++    'max(website_event.created_at) desc, session.session_id',
+   );
+ }
+ 
