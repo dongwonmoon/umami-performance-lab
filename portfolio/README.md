@@ -36,6 +36,7 @@
 | Attribution 공통 집계 — 로컬 후보 유지 | 30일 SQL 프로토타입 first-click 228.4→96.6ms. 관측한 응답은 같았으나 동시 수집·제품 전체의 동작 동등성은 미검증 | [실험 기록](../experiments/attribution-shared.md) |
 | 단건/batch 입력·조회 병행 | 기존 batch의 효용과 관찰 범위 내 저장 결과 확인. 새 최적화나 최대 용량 성과가 아님 | [실험 기록](../experiments/ingestion-batch.md) |
 | 후보 탐색·기각 | 문제를 발견하지 못한 관찰도 보존해 같은 조사를 반복하지 않음 | [탐색 기록](../experiments/next-candidates.md) |
+| 오류 복구 UX | DB 복구 후에도 기존 OK로 화면이 복구되지 않는 로컬 흐름을 확인하고 명시적 Refresh로 교체. 장애 예방·DB 성능 개선이 아닌 작은 UX 기여이며 upstream 미제출 | [근거·trade-off](../experiments/next-candidates.md#error-recovery-ux-closure--2026-09-10) |
 
 ## 자료를 읽는 방법
 

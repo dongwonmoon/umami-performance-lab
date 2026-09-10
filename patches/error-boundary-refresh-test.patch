@@ -1,0 +1,42 @@
+diff --git a/src/components/common/ErrorBoundary.test.tsx b/src/components/common/ErrorBoundary.test.tsx
+new file mode 100644
+index 0000000..b9bba07
+--- /dev/null
++++ b/src/components/common/ErrorBoundary.test.tsx
+@@ -0,0 +1,36 @@
++import { afterEach, expect, test, vi } from 'vitest';
++import { render, screen } from '@/test/render';
++import { ErrorBoundary } from './ErrorBoundary';
++
++vi.mock('@/components/hooks', () => ({
++  useMessages: () => ({
++    t: (key: string) => (key === 'label.refresh' ? 'Refresh' : key),
++    messages: { error: 'message.error' },
++    labels: { refresh: 'label.refresh' },
++  }),
++}));
++
++function ThrowingChild() {
++  throw new Error('render failed');
++}
++
++afterEach(() => vi.unstubAllGlobals());
++
++test('offers an explicit refresh action that reloads the page', async () => {
++  const reload = vi.fn();
++  vi.stubGlobal('location', { reload });
++
++  const { user } = render(
++    <ErrorBoundary>
++      <ThrowingChild />
++    </ErrorBoundary>,
++  );
++
++  await screen.findByRole('button', { name: 'Refresh' });
++  expect(screen.getAllByRole('button')).toHaveLength(1);
++  expect(screen.queryByRole('button', { name: 'OK' })).not.toBeInTheDocument();
++  expect(reload).not.toHaveBeenCalled();
++  await user.click(screen.getByRole('button', { name: 'Refresh' }));
++
++  expect(reload).toHaveBeenCalledOnce();
++});

@@ -837,3 +837,444 @@ the build-generated executable-mode change. Fresh targeted unit tests3/3 and
 changed-file lint passed immediately before commit. PR credits issue4526 and
 links immutable direct test/summary files. OPEN is submission, not acceptance
 or merge; no maintainer response or CI success is claimed here.
+
+### Fresh candidate screening — 2026-09-10
+
+Read-only source inspection at dev `1d7874b7d946e9d8e9b257a051fa0789ddd32728`
+(existing checkout has the unrelated session-activity patch). Live dev SHA was
+checked; no application, database, browser, benchmark or upstream change ran.
+
+**Preferred next observation: heatmap detail repeats the page-list aggregate.**
+`HeatmapsPage.tsx` mounts `Heatmap.tsx:61-103`, which separately requests the page
+list and, when a path is selected, its detail through `useResultQuery`.
+The displayed list comes only from `pagesData.pages`; detail consumes points,
+scroll and snapshot, not `detailData.pages`. Yet relational `getHeatmap.ts:118-143`
+always aggregates all matching pages before branching on `urlPath`; selected-page
+requests repeat that aggregate. ClickHouse has the same broad response structure.
+This is a mounted UI/code fact, not an observed browser trace or measured bottleneck.
+
+The list is capped at 100 pages and click detail at 5,000 grouped points. React
+Query caching may avoid repeat requests for a revisited path; this does not merge
+list and detail keys. Full API responses may intentionally serve other consumers:
+`tests/api/reports.spec.ts:401-442` explicitly requires a selected-page request to
+include the page list. Do not simply remove it or call it unused globally.
+
+Smallest next check: on disposable, recording-enabled synthetic input, open the
+heatmap list and select two pages; capture actual requests and measure the page
+aggregate separately from detail. If its cost is negligible, stop. If material,
+evaluate a narrow opt-in detail-only path that preserves existing API defaults;
+no cache, endpoint split or implementation is selected yet. Account for collection
+setup cost: existing recording qualification had heatmaps disabled, so its data
+does not establish this candidate's value. A bounded GitHub heatmap PR search
+found no clearly matching fix; this is not a comprehensive novelty claim.
+
+Other screening outcomes: retention's repeated client-side array searches are
+bounded by a calendar-month UI (`RetentionPage.tsx:8-21`); no reason to enlarge
+the fixture to force a cost. Revenue repeats session qualification but resembles
+the existing attribution investigation and was not prioritized. Luna traced
+mounted board realtime components: header-only/chart-only widgets fetch the full
+payload, but shared query keys mitigate duplication, and activity is capped at
+100 SQL rows (up to 200 UI rows including synthetic session entries). Those
+entries serve visitor/activity semantics; neither a new defect nor a worthwhile
+endpoint split was established. Keep these as lower-priority observations.
+
+### Heatmap ordinary-flow qualification — 2026-09-10
+
+Reused the built dev1d7874b7 + unrelated session-activity patch with isolated
+walkthrough DB5434. Initial heatmap table was empty. Created one synthetic site
+`3c1fd4cd-668e-4769-a3f3-7499f33f9a59`, heatmap-only sampling100%, and served two
+simple local pages. Real Chromium clicks through the unmodified tracker/recorder
+produced three click rows: /first2 (button and navigation link), /second1.
+Used an ordinary Chrome User-Agent header; bot policy was not disabled. Automatic
+scroll observations also exist, including iframe visits; only click mode was tested.
+
+Actual heatmap UI reload → /first → /second returned three HTTP200 responses.
+Each included both page names; point counts were0/2/1. A single retained browser
+observation returned76.6/16.1/21.9ms and545/936/828 transferred bytes, respectively.
+These are Resource Timing samples, not repeated medians or SQL times. Browser
+parameters: start2026-09-09T02:00Z, end2026-09-10T02:59:59.999Z, Asia/Seoul,
+no filters. Snapshot `.playwright-cli/page-2026-09-10T02-34-23-872Z.yml` and local
+CLI observations support the flow. Initial cross-call Node-global response capture
+did not persist; only the final single-call returned responses establish payloads.
+
+Source-linked `.local/heatmap-qualification.ts` calls getHeatmap for list/first/
+second three times; asserts two pages,1/2/2 raw SQL calls and nonempty detail.
+It records each raw-query duration and a separate EXPLAIN ANALYZE execution in
+`.local/heatmap-qualification.json`. Local PG15, read-only/5s statement options,
+same three click rows; query dates were the Korean calendar day, not the browser's
+rolling range. Repeated page SQL executions took0.046–0.143ms. Warm raw-query
+calls took0.589–2.140ms; first call126.233ms includes client-side startup/connection
+overhead and is not a126ms SQL claim. Interleaved EXPLAIN warms caches: no speedup
+or representative latency claim. The helper does not measure snapshot lookup or
+total HTTP time. No data amplification, comparative patch or load test ran.
+
+Decision: duplicated work confirmed, material cost not established in this tiny
+fixture. Pause implementation, not a claim of scalability. Revisit with justified
+traffic/recording-volume evidence, not arbitrary rows designed to force slowness.
+Existing API page-list contract remains unchanged. Dedicated browser, app, synthetic
+page server and walkthrough DB stopped; volumes/synthetic rows preserved. Only
+the owning record changes in Git; local probe/output remain ignored. No commit,
+push or upstream posting.
+
+### Reported replay/identity screening — 2026-09-10
+
+- [Issue #4497](https://github.com/umami-software/umami/issues/4497) reports v3.3.1
+  (`ca661c7`), PostgreSQL, a playable 4:07 replay listed as 0:01 and hidden by
+  `minDuration=5`; the reporter also saw player overshoot to 5:23. A comment
+  measured 247.014s wall span versus 1.961s summed chunk spans (37 chunks/70 events).
+- Current `dev` is `1d7874b7`; its replay query still sums chunk spans for both
+  `duration` and the minimum-duration `HAVING` in PostgreSQL and ClickHouse
+  (`src/queries/sql/replays/getSessionReplays.ts:51-70,116-135`).
+- [PR #4503](https://github.com/umami-software/umami/pull/4503) proposes the
+  endpoint-span expression in both stores and is OPEN/unmerged. The player
+  overshoot remains a separate, unverified defect. **Priority: one smallest
+  check**—apply/read-test the PR expression against a gapped multi-chunk fixture;
+  do not duplicate implementation in this lab.
+- [Issue #4512](https://github.com/umami-software/umami/issues/4512) reports v3.3.1
+  identity collision under shared IP + identical UA/hostname/site: `identify()`
+  updates session primary identity while per-event IDs remain correct. Current
+  mounted flow writes `session_link` and calls `updateSession` on every new link
+  (`src/app/api/send/route.ts:315-343`); current GET stitches from the primary
+  only once it exists (`.../sessions/[sessionId]/route.ts:33-49`).
+- [PR #4518](https://github.com/umami-software/umami/pull/4518) keeps all linked IDs
+  visible/stitchable while retaining last-wins primary semantics; it is OPEN/unmerged.
+  Its review notes the additive `distinctIds` field is absent from the generated
+  public API contract. **Policy choice:** hold implementation; if accepted, the
+  smallest check is two colliding identities through session GET plus contract
+  coverage. No independent candidate established.
+
+Main reviewed issue4497's reproduction/comment and PR4503's scope (4 additions/
+4 deletions, existing proposal). Prefer independent validation of that proposal,
+not another implementation or a claim of original diagnosis. The reporter used
+a downstream masking patch; an unmodified local recorder would separate that
+environment difference. No runtime reproduction has been performed in this pass.
+
+Operational reports screened but not selected: [4491](https://github.com/umami-software/umami/issues/4491)
+requests a configurable ClickHouse pool without measured saturation; [4475](https://github.com/umami-software/umami/issues/4475)
+omits the original migration failure log, which a collaborator requested;
+[4458](https://github.com/umami-software/umami/issues/4458) lacks a precise failing
+request/source path for the alleged startup failure; [4459](https://github.com/umami-software/umami/issues/4459)
+mixes authentication and unconfigured2FA symptoms without confirming one cause.
+Do not infer a new fix, request private databases, or execute suggested destructive
+recovery commands. No services, patch, commit, push or external comment in this pass.
+
+### Upgrade/recovery documentation and startup check — 2026-09-10
+
+Question: what can an operator safely determine when an update fails? This is
+read-only qualification, not reproduction of issue4475 or a recovery runbook.
+
+- [Official updates](https://docs.umami.is/docs/updates) describes pull/build/restart
+  and post-upgrade ANALYZE, but that page does not give failed-migration diagnosis
+  or rollback steps. The [CapRover guide](https://docs.umami.is/docs/guides/running-on-caprover)
+  explicitly recommends a database backup; it also contains legacy MySQL/image-prefix
+  advice, so it is not a verified v3.3.1 deployment procedure. Do not claim that all
+  official documentation lacks backup guidance.
+- Read the release-specific [v3.3.1 package scripts](https://github.com/umami-software/umami/blob/v3.3.1/package.json)
+  and [check-db.js](https://github.com/umami-software/umami/blob/v3.3.1/scripts/check-db.js):
+  Docker startup runs check-db before tracker update/server; check-db executes
+  `prisma migrate deploy` unless explicitly skipped and exits1 on a caught failure.
+  Source-build checks and Docker runtime checks are distinct paths. Pinned dev
+  1d7874b7 instead uses a set-e startup shell with the same ordering. Local checkout
+  1faf55d contains the unrelated submitted session-activity patch; it was not edited.
+- [Migration22](https://github.com/umami-software/umami/blob/v3.3.1/prisma/migrations/22_add_2fa/migration.sql)
+  adds columns/tables/indexes; no reverse SQL is performed by the inspected startup
+  path. Switching app images is not itself a database restore. Whether a specific
+  older app remains compatible needs checking, not a blanket incompatibility claim.
+- [Issue4475](https://github.com/umami-software/umami/issues/4475) shows P3009 and
+  historical app-only rollback, not the initial migration error. The collaborator
+  requests `_prisma_migrations` error details. No causal link between the rollback
+  and original failure has been established.
+- [Prisma failed-migration guidance](https://www.prisma.io/docs/orm/v7/prisma-migrate/workflows/patching-and-hotfixing#failed-migration)
+  identifies the migration `logs` column and distinguishes history resolution from
+  actually repairing partially applied steps. Marking a migration rolled back is
+  not automatic reversal of its SQL. Do not blindly retry, mark applied, reset the
+  database, or bypass migration checks as a proposed fix.
+
+Decision: an operator-guidance question is supported; an application defect is not.
+Next bounded runtime question, if pursued: establish a normal version-pinned upgrade
+on disposable synthetic data and its migration logs before choosing a failure
+scenario. Do not manufacture schema damage to claim reproduction of4475. If the
+normal path is clear, do not force a new automation/chaos framework or upstream PR.
+No runtime upgrade, failure injection, restore, service start, commit or push ran.
+
+Preparation (user-run first boot pending): ignored `.local/upgrade-compose.yml`
+defines project `umami-upgrade-check`, a new `upgrade-data` volume and localhost
+port3011; PostgreSQL has no host port. Both services disable automatic restart so
+startup failures remain inspectable. Credentials are deliberately public dummy
+values for local synthetic data, not production configuration. No existing volume
+with that project name or listener on3011 was found at preparation time.
+
+Registry manifest inspection verified linux/arm64 and linux/amd64 for both images:
+3.1.0 index `sha256:e3f80c0625aad7179b49da27d475357cabb1068b8cacd9a792cfd6966888b123`;
+3.3.1 index `sha256:fa32d116cf20cad52cbc3fad9a63b46e7fa02299d8f967168eb453d49c476b4a`.
+Compose defaults to the former; PostgreSQL15-alpine is pinned to existing local
+RepoDigest `sha256:fe0737ba566a2c5b2a28f34433c0a423261900ec17b9bf7ad115e1aae7e57f1b`.
+`docker compose -f .local/upgrade-compose.yml config --quiet` passed. No image
+layers were downloaded and no services started by the agent.
+
+Sequence: user boots3.1.0; establish login/site/synthetic event baseline; stop only
+the app to freeze writes, take a checked pg_dump backup and record migration state;
+then switch only the app image to pinned3.3.1 without recreating/upgrading the DB;
+check login, preserved data, new collection and migration history. Stop on error
+and retain logs; do not reset volumes or mark migrations resolved automatically.
+Heartbeat alone is not success. Backup creation is not proof of restoration.
+The initial handoff intentionally stops before fixture creation or upgrade.
+
+3.1.0 baseline captured after user first boot (2026-09-10): image healthy,
+19 migrations completed; login and website creation succeeded. API-generated
+synthetic fixture has3 pageviews (`/upgrade-a`, `/upgrade-b`, `/upgrade-c`) and
+one named `synthetic_signup` event. API stats report3 pageviews/1 visitor/1 visit;
+DB snapshot contains1 website,1 session,4 events and4 event-data rows. Fixed stats
+window1789014850000–1789014870000ms and row snapshot are retained in ignored
+`.local/upgrade-baseline.json` and `.local/upgrade-baseline-db.json` (no login token).
+Main independently checked persisted event-type counts (3 pageviews/1 named event).
+
+App was deliberately stopped (exit143); the isolated DB remains healthy and running.
+Custom pg_dump `.local/upgrade-before-v3.1.0-20260910T043416Z.dump` is49,881 bytes,
+SHA256 `41ec2b97da7e00999ae76ad157003f4be98a522464a98a14453bc62b4fd2e942`.
+Main verified the hash and successfully read its archive listing using the DB
+container's pg_restore. This is archive-readability evidence, NOT a tested restore.
+Target override `.local/upgrade-target.yml` pins3.3.1; configuration validation
+passes. Use both Compose files after upgrade (base alone selects3.1.0).
+Next handoff pulls/recreates only app with `--no-deps`, retaining DB/container/volume.
+Upgrade and after-state validation are still pending; no success claim or PR.
+
+3.3.1 outcome — 2026-09-10: user ran the app-only update. Actual image digest
+matched the pinned target; DB container creation predates the update and its
+`umami-upgrade-check_upgrade-data` mount remains. Startup applied migrations20–24;
+SQL inspection confirms24 completed, none unfinished/rolled back. Login succeeds.
+The fixed-window stats JSON is semantically identical (3 pageviews/1 visitor/1 visit).
+Main independently compared baseline fields against actual DB rows: original
+website, session,4 events and4 event-data rows match. Website `replay_enabled`
+is compared to `recorder_enabled`, the explicit migration20 rename; this is not
+byte-identical whole-schema preservation. The fixture had recording disabled.
+
+One new `/upgrade-after` pageview was accepted and persisted. Wider-window stats
+now report4 pageviews/1 visitor/1 visit. Local summaries are
+`.local/upgrade-after.json` and `.local/upgrade-after-db.json`; the latter contains
+only new-event/count evidence, not a full before-send row snapshot. Main checked
+prior rows directly after that insertion. Stored stats hashes differ in formatting;
+parsed JSON deep equality, not hash equality, establishes the fixed-window match.
+
+Decision: normal upgrade passes this small synthetic smoke check. It does not
+reproduce4475, validate partial-migration recovery, establish large-data migration
+performance, exercise enabled recording/2FA or duplicate session-data migration,
+or prove backup restoration. No new defect or code fix established; do not force
+failure injection merely to produce a case. Isolated app and DB stopped after checks;
+volume and backup retained. No other services changed, no commit/push/PR.
+
+### Separate-copy restore closure — 2026-09-10
+
+User approved restoring the pre-upgrade archive, not overwriting the upgraded DB.
+Used `-p umami-restore-check` with the base Compose file and ignored
+`.local/upgrade-restore.yml`: separate project network/volume
+`umami-restore-check_upgrade-data`, pinned3.1.0 app on localhost3012.
+Target had zero public tables before restore. Verified the archive SHA above,
+then `pg_restore --exit-on-error -U upgrade -d upgrade` completed with exit0.
+Only after restore was the app started; images were already local (`--pull never`).
+
+Main independently checked actual restored DB against baseline fields:1 website,
+1 session,4 events,4 event-data rows and19 migration records match, with matching
+row counts. Fresh API login and parsed fixed-window stats also match baseline.
+There are no `/upgrade-after` events in the restored copy. This is the expected
+backup-time cutoff, not an unexpected restore defect: choosing this restored copy
+as the service DB would omit that later event. The original upgraded volume is
+retained untouched, so no original event was actually deleted in this exercise.
+
+Local evidence: `.local/upgrade-restore-result.json`, `upgrade-restore-db.json`
+and `upgrade-restore-commands.md`. Both restore containers stopped after validation;
+both original and restored volumes and archive retained. No commit/push/PR.
+
+Minimal tested operator sequence (local synthetic setup, not a generic runbook):
+1. Record app image, DB image, configuration and fixed-data/API baseline; stop app
+   writes before taking this small fixture's custom pg_dump archive.
+2. Preserve the current DB; create a separate empty target with the same PostgreSQL
+   image/role. Check project-scoped volume identity and DB readiness before restoring.
+3. Check archive checksum; restore with `pg_restore --exit-on-error`. Stop on error;
+   do not reset an existing database or mark migrations resolved to bypass failures.
+4. Start the matching old app against ONLY the restored DB. Check login, baseline
+   row values/counts, migrations and fixed-window API stats, not just heartbeat.
+5. Account for writes after the backup before any production cutover; this exercise
+   made no cutover. Stop disposable services, retain evidence until cleanup is approved.
+
+Decision: close the normal upgrade plus backup-restore smoke check. A real restore
+is now verified for this fixture; no application defect or reliability improvement
+was demonstrated. This was same-host, small-data, default-admin testing with no
+enabled2FA/recording or alternate-role coverage. It establishes no production RTO,
+general recovery guarantee, point-in-time recovery or fix for issue4475. No further
+failure injection or automation is justified by this result alone.
+
+Portfolio disposition (user discussion): do not promote this upgrade/restore check
+as a standalone featured portfolio case. The operational checks succeeded, but
+the intended search for a meaningful defect/improvement produced neither a fix
+nor measured operational benefit. Retain it as supporting practice and a closed
+investigation, not an optimization, outage response, or issue4475 resolution.
+
+### Next bounded candidate after restore — 2026-09-10
+
+Re-read [4494](https://github.com/umami-software/umami/issues/4494): Vercel/Supabase
+report includes EMAXCONNSESSION pool_size15, Website.findUnique and PrismaP2039
+(the prose saysP2010). The reported navigation/dashboard failure is real external
+evidence, not our reproduction; serverless connection behavior is not established
+by a single local process. No comments or PR matching4494 found in the narrow search.
+
+Pinned dev remains1d7874b7. Source path: website route layout awaits getWebsite →
+website.findUnique; Providers already wraps children in a global ErrorBoundary.
+Its OK button calls resetErrorBoundary, and no route error.tsx was found. Therefore
+"there is no error handling" is false. Candidate question: after a transient DB
+read failure has cleared, does this existing action actually recover the website
+view, or repeat the same server-render failure? This needs browser observation;
+do not claim it broken from source alone. Separate connection-capacity/configuration
+diagnosis from UI recovery, and do not add automatic retries to an overloaded DB
+without evidence. Any local fault test would validate only recovery semantics,
+not reproduce Supabase's pool limit or establish occurrence frequency.
+
+Luna screened filter issues4500/4489 and existing open PRs4501/4496. Do not duplicate
+those fixes. Local notes `.local/filter-issue-screen.md` retain exact examples.
+No runtime fault, new patch, service start, external comment or commit in this pass.
+
+### DB read-failure recovery observation — 2026-09-10
+
+User approved a bounded local failure/recovery check, not implementation. Reused
+only isolated `umami-upgrade-check` with pinned3.3.1/PG15 and synthetic site.
+Luna observed one cycle and main independently repeated: healthy site → site list →
+stop only DB → click the existing site link. App logs show Website.findUnique
+PrismaP1001/DatabaseNotReachable; browser displays Something went wrong, React441,
+and OK. This is NOT EMAXCONNSESSION/P2039 or a reproduction of Supabase pool limits.
+
+Restarted the same DB before attempting recovery. Main independently logged in and
+read the website via API (both HTTP200) while the original browser remained failed.
+Attached a Playwright request listener immediately before clicking the observed OK
+button: zero requests during click plus1s observation; the same error UI remained.
+Full page reload then recovered: Overview visible and error heading absent after
+render completion. Initial reload snapshot was still loading and is not the success
+evidence; the subsequent visibility check establishes recovery.
+
+Source explanation: v3.3.1 ErrorBoundary passes only resetErrorBoundary to OK with
+no onReset callback/server refresh; Providers wraps children in this boundary.
+The inspected current-dev dependency reset implementation resets local caught-error
+state; it does not fetch a new server result itself. Reusing the failed Server
+Component result explains the observation, but no patched comparison has been run.
+React's [441 explanation](https://react.dev/errors/441) identifies a server-render
+error whose details are hidden in production; exposing database errors is not a fix.
+
+Evidence: `.local/db-recovery-observation.md`, failure snapshot
+`.playwright-cli/page-2026-09-10T05-11-04-078Z.yml`, and main tool outputs for
+independent API200, zero-request OK click, and successful post-reload visibility.
+Existing snapshots from Luna are indexed in that local note. Screenshot references
+were subsequently removed because the files were not retained. Two local
+cycles, no claim about production frequency or connection-capacity improvement.
+
+Decision: a concrete recovery-button gap survives observation; full reload is a
+working workaround. Next work, if approved, is choosing/testing a minimal recovery
+action and checking effects on other errors, NOT automatic DB retries or pool tuning.
+No product code changed, no commit/push/upstream post. Test browser and isolated
+project stopped after final checks; DB volumes retained.
+
+Recovery candidate preparation: retain OK's local reset semantics and add a separate
+translated Refresh action using existing labels.refresh and window.location.reload.
+No automatic retry, error-code classification or DB configuration change. Full
+reload discards unsaved client state and reissues normal page requests, so it is
+explicit/user-triggered; it does not restore service while the DB remains unavailable.
+
+Luna implemented only ErrorBoundary.tsx and its adjacent test in the existing dev
+verification checkout; unrelated session-query commit and MCP executable-mode change
+are not included in this candidate. New refresh test failed before implementation;
+after implementation main reran2 tests successfully: explicit reload (no auto reload)
+and preserved OK recovery for transient client rendering failure. Changed-file lint
+passes. Navigation is mocked in jsdom; these tests do not establish RSC recovery.
+Product patch `patches/error-boundary-refresh.patch` changes1 line/adds1 line;
+test patch is separate `patches/error-boundary-refresh-test.patch`.
+
+Browser validation pending user build: `.local/build-recovery.sh` downloads immutable
+v3.3.1 source ca661c7 and applies only the product patch, then builds local image
+`umami-recovery:3.3.1-refresh`. No current-dev/session patch is copied into that
+image. `.local/recovery-candidate.yml` selects it for the synthetic project. Shell
+syntax and Compose config checks pass; build has NOT run. Build output will be in
+`.local/recovery-build.log`; source remains in a unique /private/tmp directory.
+Next: repeat the recorded DB-failure/recovery flow with the new Refresh button and
+verify recovery without an extra manual reload. Do not claim complete fix yet.
+No commit, push or upstream submission.
+
+Candidate runtime validation — 2026-09-10: user build completed successfully;
+actual running image ID is
+`sha256:52f83177a7788bd8bf83fce1006de09962eb9fb8e775dba7e5e15708a64ac681`.
+Source retained at `/private/tmp/umami-recovery-build.26cYBd/source` identifies3.3.1
+and reverse-apply check confirms the product patch. Unit tests remain on the dev
+verification checkout; they are not presented as a full3.3.1 test-suite run.
+
+One candidate browser cycle reproduced the same DB-down error. DB was restarted
+and independently readable before UI recovery. OK still left the error; the added
+Refresh action requested fresh auth/site/stats/metrics and returned to Overview,
+without an intervening manual reload. Main verified actual image and recovered
+browser (Overview visible, error heading absent) and reran2 unit tests/changed-file
+lint successfully. Candidate evidence is `.local/db-recovery-after.md` and snapshots
+`page-2026-09-10T05-47-16-296Z.yml`, `page-2026-09-10T05-47-42-890Z.yml`,
+`page-2026-09-10T05-47-56-089Z.yml` under ignored `.playwright-cli/`.
+Agent's nonexistent screenshot reference was removed; it is not evidence. A stale
+element click failed before a new snapshot/valid Refresh click; this was a tooling
+retry, not an app recovery. Request indices skip static requests in CLI output;
+do not infer a precise request count from index gaps.
+
+Decision: the explicit reload escape hatch works for the observed local server-error
+case. This adds a recovery option; it does not make OK recover server errors, reduce
+DB failures, fix Supabase pool exhaustion or establish reliability under all errors.
+Known trade-off: full reload discards unsaved UI state and requests the page again.
+The previous lightweight OK recovery remains. No automatic retry loop is added.
+Runtime coverage is one candidate Chromium cycle against two baseline cycles;
+persistent DB failure, other browsers and enabled2FA were not exercised. Scoped
+implementation validation is complete, not a claim of upstream acceptance.
+Candidate browser/project stopped after validation; images/volumes retained.
+No commit, push or PR submitted.
+
+### Error recovery UX closure — 2026-09-10
+
+Final decision, superseding the two-button candidate above: use **Refresh only**.
+The user inspected the candidate UI and approved replacing OK, not adding retry
+policies. The final patch replaces local boundary reset with the same explicit
+`window.location.reload()` already exercised in the candidate. It reuses the
+existing translated `labels.refresh`; no dependency or server change is needed.
+
+Reason: OK neither describes its action nor recovered the observed server-render
+failure. Keeping two subtly different recovery actions requires users to understand
+an implementation distinction. Local reset can recover a synthetic transient client
+render failure (the earlier test demonstrated this), but the inspected application
+did not establish a real flow requiring that cheaper recovery path. This is a UX
+trade-off, not proof that reset is always useless: Refresh always repeats document
+requests and clears in-memory client state, even when local reset might suffice.
+The global fallback already unmounts its child subtree; preserving an unsaved form
+with the former OK action was not established. Persistent faults can still recur.
+
+Classification: **error-recovery UX improvement**, discovered through a local
+reliability experiment. Not DB availability, connection-capacity or incident-response
+improvement; not a featured DevOps achievement by itself. The two-button image and
+its observations above remain historical evidence, not validation of the final UI.
+The owning patches are [product](../patches/error-boundary-refresh.patch) and
+[focused test](../patches/error-boundary-refresh-test.patch). Product base is v3.3.1
+`ca661c7057984aa98ed4f7083d84dae2f65bfcb0`; test harness is the inspected dev
+`1d7874b7d946e9d8e9b257a051fa0789ddd32728` checkout. Apply with `git apply --check`
+first. The unrelated session-query patch is not included.
+
+Final verification: the revised test failed against two buttons, then passed with
+one. Main reran the focused Vitest test (1 passed) and changed-file Biome check
+(2 files, no fixes). Both product/test patches pass reverse-apply checks against
+their respective modified source files; a malformed product hunk count discovered
+during review was corrected before publishing. No full test-suite claim.
+
+Rebuilt the existing v3.3.1 source with Docker cache (exit0), applying only the final
+product change. Running image ID:
+`sha256:1f59f5c25db54a90be0e4232c4e98b7e118624c71bfbbc74cc2a99618c09c2db`.
+Build skips application type validation per upstream build settings; successful
+build is not presented as a full type-check. In the in-app browser, main repeated
+one cycle: website list → stop isolated DB → click Upgrade fixture → React441 with
+only Refresh → restart DB and confirm pg_isready → click Refresh → website heading,
+Pages and synthetic stats visible (1 visitor, 1 visit, 4 views). No intervening manual
+reload. This is a final single-button runtime check, separate from the historical
+two-button cycle. Tool-returned DOM snapshots establish the observation; no saved
+screenshot or public raw-log artifact is claimed.
+
+User authorized closure in the personal lab repository only: preserve this record
+and both patches, with a small portfolio-index entry. No upstream PR/comment or
+production deployment. Local DB backups, raw logs and Compose files stay ignored.
+After the check, stopped only the isolated app/DB and closed the test tab; retained
+images, volumes and backups. No unrelated service or source checkout was removed.
