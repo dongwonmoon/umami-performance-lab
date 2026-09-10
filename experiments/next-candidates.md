@@ -794,3 +794,46 @@ and rolls back. It does not rebuild or start the app. Stop the disposable DB
 after checks; preserve any existing volumes. Next external action is a draft
 verification comment on issue4526, not an automatic PR. Full build/lint and
 current-dev compatibility remain submission work, not completed validations.
+
+External follow-up: with user approval, posted the independent reproduction
+[comment](https://github.com/umami-software/umami/issues/4526#issuecomment-5611336850)
+on2026-09-10, linking immutable lab commitc3ecd02. No PR submitted.
+At that check dev1d7874b7d946e9d8e9b257a051fa0789ddd32728 still contains the
+same relational IN expression. PR searches for `session activity`, `4526`, and
+`getSessionActivity` found no matching fix; this bounded search is not proof of
+absence. Current-dev build/lint and submission packaging remain pending.
+
+Comment was subsequently edited with user approval to explain the checks inline
+and omit the repository-root link; the same comment URL remains valid.
+
+PR preparation: fetched pinned current dev1d7874b7 into a separate non-promisor
+checkout at `/private/tmp/umami-session-pr-check.2I1SLd`. No other case's patches
+are included. Patch applies cleanly; git diff shows one SQL file,6 additions and
+5 deletions; diff --check passes. Source-derived DB regression passed on this
+checkout using the existing disposable PG15 schema (not a fresh migration of
+current dev). DB stopped. Dependency install/build/lint and existing unit tests
+on this fresh checkout remain user-run work. Dockerfile pins pnpm11.21.0.
+Use SKIP_DB_CHECK=1 and a dummy localhost URL for build verification to avoid
+database checks/migrations; this does not establish migration/runtime health.
+No PR or remote branch submitted, and no new lab commit/push at this stage.
+
+User-run verification inspected2026-09-10: build log reaches postbuild successfully;
+following targeted Vitest run reports2 files/3 tests passed. Full lint exits1.
+Main compared `biome lint . --max-diagnostics=100` on patched checkout and pristine
+archive of the SAME dev1d7874b7 using the same installed dependencies: diagnostics
+match byte-for-byte except the elapsed-ms summary. Both have6 errors,13 warnings,
+11 infos. Raw comparison logs are ignored.local/session-lint-{baseline,patched}.log.
+Single changed SQL file lint passes. Earlier visitor checkout had14 warnings,
+so do not claim identical totals across historical revisions. No unrelated lint
+fixes warranted. Build/install also changed only the executable mode of
+packages/mcp/bin/umami-mcp.js (100644→100755); exclude that artifact from the PR.
+No full-lint success claim, no PR submission or new commit/push.
+
+Submission2026-09-10: user approved the reviewed draft.
+[PR#4528](https://github.com/umami-software/umami/pull/4528) opened against `dev`,
+head `dongwonmoon:codex/session-activity-exists`, commit1faf55d. Verified remote
+diff contains only getSessionActivity.ts (6 additions/5 deletions), excluding
+the build-generated executable-mode change. Fresh targeted unit tests3/3 and
+changed-file lint passed immediately before commit. PR credits issue4526 and
+links immutable direct test/summary files. OPEN is submission, not acceptance
+or merge; no maintainer response or CI success is claimed here.
