@@ -503,3 +503,294 @@ send to obtain its token, reset, then one cached send and a fresh-token control.
 Inspect HTTP outcomes and persisted event/session linkage. No race injection,
 large dataset, retention job, retry queue, or existing benchmark data required.
 Do not select a fix until actual API/DB behavior is observed.
+
+### Filter/request-scope screening — 2026-09-09
+
+**Superseded by the browser check below: session-summary pagination candidate
+rejected. The hook exists but its component is not mounted by the current page.**
+
+Pinned dev9fb7bace source, no service startup or upstream edits. Overview country
+filters, chart unit, dimension tabs and comparison periods change corresponding
+query semantics; no unnecessary recomputation established for those interactions.
+Stats excludes chart unit already. Do not revive the previous debounce or
+Attribution/Performance-summary cases under a new name.
+
+A narrower candidate is visitor-list pagination. DataGrid updates URL page;
+`useWebsiteSessionStatsQuery` spreads `useFilterParameters()` (default includes
+page/pageSize) into both its query key and request. The sessions/stats route and
+`getWebsiteSessionStats` aggregate the date/filter population, not one list page.
+The event-summary hook already uses `includePagination: false`.
+
+Offline probe `.local/session-pagination-probe.cjs` transpiles the actual hooks
+and filter helper, uses the installed TanStack QueryClient with the app's 60s
+staleTime, and substitutes navigation/date/HTTP boundaries. Fixed country/date,
+pages 1→2→3→1: session summary has 3 distinct keys/3 mocked requests; event
+summary has 1 key/1 request. Assertions passed. This is not an actual React render,
+browser trace, API response-equivalence check or DB performance measurement.
+
+Next qualification: normal visitor page 1→2→3 on a fixed synthetic website;
+observe actual summary requests, response equality and their server cost before
+judging significance. Excluding pagination may retain summary data until existing
+cache refresh rather than refreshing on every new page; assess that freshness
+trade-off, and keep genuine country/date/search semantics separate. No patch
+selected, no production-impact or novelty claim. Per user preference, intermediate
+investigation remains uncommitted until the case is concluded.
+
+### Session pagination browser check — candidate rejected, 2026-09-09
+
+Reused existing dev9fb7bace build (unrelated visitor-count patch) and isolated
+walkthrough DB; no rebuild, seeding, schema change or analytical-data writes.
+Actual Sessions Activity page exposed 983 records across pages for fixed range
+startAt=1788796800000, endAt=1788969599999. Clicked next twice (1→2→3).
+Captured HTTP responses: only list requests, all200, pages1/2/3 and count983.
+Browser request durations were56.038/43.548/29.340ms; these are one warm run's
+list timings, NOT summary costs, SQL CPU timings or optimization evidence.
+No sessions/stats request occurred. Console errors were image/favicon404s,
+not failed summary requests.
+
+Root correction: `SessionsPage.tsx` renders SessionsDataTable/SessionProperties
+and SessionModal, not SessionsMetricsBar. Repository search found no mounting
+caller for SessionsMetricsBar; that unused component was the only hook caller.
+The API remains exposed, but existence is not proof the UI invokes it. The prior
+offline harness manually invoked an unused hook and therefore did not model the
+current user's path. This was a call-chain qualification error, not an Umami bug.
+
+Probe `.local/session-pagination-browser.js` returns request URLs/status/timings
+without auth headers or private analytics. The first run used console.log without
+returning samples; only the subsequent returned run supports the timings above.
+Browser snapshot `.playwright-cli/page-2026-09-09T11-07-52-923Z.yml` and console
+log from the same timestamp remain ignored. No patch, cache change, dead-code
+cleanup or follow-on stress test is justified by this candidate.
+
+### Overview expanded paths walkthrough — 2026-09-09
+
+Real browser on the same dev9fb7bace walkthrough build/DB, fixed date range
+1788796800000–1788969599999. Opened Overview → Pages/Path → More, then searched
+`docs` and cleared it. No new data or load generation. Browser Resource Timing
+showed one metrics/expanded request on opening (52.3ms,1534 transfer bytes), one
+search=docs request (35.9ms,791 bytes), with 13 initial paths and 5 matching rows.
+No overview stats/chart/other metric requests were observed during search.
+Clearing search restored13 rows with a24.4ms request; more than the configured
+60s stale window had elapsed since initial loading, so this is not evidence of
+failed cache reuse. An active-user poll was also observed (24.3ms), not attributed
+to search. These are individual warm local observations, not benchmark medians,
+SQL execution times or full interaction-to-paint timings.
+
+Clicked Views header: no API request or sort state appeared. Actual
+MetricsExpandedTable.tsx uses plain DataColumns without sorting configuration;
+do not claim a sorting flow was exercised. Search is local component state,
+passed only to its expanded-metrics query, with an existing300ms delay.
+No debounce or caching patch justified. Snapshot:
+`.playwright-cli/page-2026-09-09T11-12-17-539Z.yml` (ignored).
+
+Decision: no compelling cost or request-fanout problem in this small fixture.
+Thirteen distinct paths cannot qualify high-cardinality behavior, but do not
+manufacture large data merely to make this candidate look slow. No source
+change, benchmark expansion, commit or push; temporary app/browser/DB stopped
+after observation, data preserved.
+
+### Public-report qualification — 2026-09-10
+
+No new runtime test, source patch, service, commit or push in this screening.
+Reports below are other users' observations, not this lab's measurements.
+
+- **First candidate: session activity / event-data membership.** Open
+  [#4526](https://github.com/umami-software/umami/issues/4526) reports runtime
+  v3.2.0, PostgreSQL16.14, 4vCPU/15GiB, approximately6.88M event_data rows and
+  443k website_event rows. Ordinary Events→session-avatar navigation requested
+  about20days despite the underlying list showing24hours. Reporter observed
+  minute-long queries and reproduced15s timeouts with4MB work_mem; an existing
+  index-backed correlated EXISTS was faster in their samples. This is a
+  planner/data-distribution problem, not evidence that every IN query is slow.
+  Live dev source at1d7874b7d946e9d8e9b257a051fa0789ddd32728 still has the
+  site/date-wide IN subquery in getSessionActivity.ts. Searches for PRs using
+  `session activity` and `hasData EXISTS` found no matching fix; this is a bounded
+  search, not proof none exists. Reporter already supplied diagnosis and proposed
+  SQL: any lab work must credit it as independent reproduction/validation, not
+  claim an original discovery. Next: verify current mounted UI/API path and
+  schema semantics, then design a bounded synthetic plan comparison; no benchmark
+  or patch yet approved by this screening.
+- **Reserve: connection-cap failure presentation.** Open
+  [#4494](https://github.com/umami-software/umami/issues/4494) reports v3.3.1,
+  Vercel+Supabase session-mode pool cap15, rapid dashboard navigation and a
+  server-component error screen. Actual pasted Prisma code is P2039 (the prose
+  also mentions P2010). Pool configuration versus application error isolation
+  remains unresolved; retry/backoff suggestions are not adopted. A local
+  single-process reproduction would not establish serverless prevalence.
+- **Not selected:** [#4498](https://github.com/umami-software/umami/issues/4498)
+  reports268MB RAM on Caprover with only version3 specified, without growth
+  history or a leak reproduction. Insufficient evidence of excessive usage.
+  [#4353](https://github.com/umami-software/umami/issues/4353) concerns stale
+  planner statistics after upgrade on approximately11M events; closed with a
+  collaborator pointing to added upgrade guidance, not a fresh fix candidate.
+  Luna also located older upgrade/pool#3417 and Docker shared-memory discussion
+  #2490; these do not establish a current code defect and are not prioritized.
+
+Decision: investigate#4526 first if continuing. It has concrete user-flow,
+environment and plan evidence, while still requiring our own verification.
+No production/general-frequency claims or commitment to an upstream PR.
+
+### Session activity qualification preparation — 2026-09-10
+
+Read-only Luna call-chain audit plus main review used the existing dev9fb7bace
+archive (unrelated visitor-count patch). SessionProfile mounts SessionActivity
+with firstAt/lastAt; its hook calls the activity route, the only runtime caller
+of getSessionActivity. Additionally, the route expands linked session IDs and,
+when multiple IDs and link dates exist, widens the dates to month boundaries.
+This is code evidence, not a newly observed browser trace or proof of a bug in
+date semantics. Do not shrink the requested history to hide SQL cost.
+
+EventData.websiteEventId is required; initial migration confirms UUID NOT NULL
+and an existing index. Preserve website and date filters in correlated EXISTS.
+The usual IN-versus-EXISTS NULL distinction therefore does not apply to these
+ID columns under the declared schema ([PostgreSQL semantics](https://www.postgresql.org/docs/16/functions-subquery.html)).
+Sibling getWebsiteEvents already uses paged_events/paged_event_data joins with
+DISTINCT; that is a possible pattern, not automatically simpler than EXISTS.
+No alternative is selected before measurements justify the extra query structure.
+
+Prepared scripts/session-activity-probe.sql: temp tables copy the installed
+public table definitions/indexes, never public data. Fixed synthetic timestamps,
+500 target events, half with no properties, 20 properties per remaining event.
+Small check events=1000 creates15000 properties; both complete 500-row projections
+matched. Raw plans and PASS are in ignored .local/session-activity-smoke.log.
+This was SQL-only PostgreSQL15.19/aarch64, not reporter16.14/x86 or API validation.
+Temp tables use local buffers and cannot establish production I/O/parallelism.
+
+Default30000 events produces595000 properties, still below the reported scale.
+User runs this qualification; setup statements capped60s and each variant's
+EXPLAIN ANALYZE+result capture capped15s. Timeout yields INCONCLUSIVE equality,
+not failure-free equivalence or an exact speedup. Each variant runs once for a
+plan and once for results, candidate first: not an alternating benchmark.
+No forced planner switches, indexes, app patch, or production memory tuning.
+Schema-dependent view rewriting fails closed if PostgreSQL formatting changes.
+Small smoke completed; larger run not yet executed. Temporary DB stopped again;
+volume preserved. No commit/push.
+
+### Session activity larger qualification — user run inspected 2026-09-10
+
+`.local/session-activity-probe.log`: PostgreSQL15.19/aarch64, work_mem4MB,
+hash_mem_multiplier2, 30000 synthetic events/595000 properties, temp tables.
+Completed EXPLAIN ANALYZE: candidate2.803ms; original14118.519ms, both500 output
+rows. These are single SQL plan executions, not API latency or benchmark medians.
+Original materialized595000 property IDs once, then visited that materialization
+500 times (298746 rows per loop, rounded plan average);472433 temp blocks read.
+Candidate used existing website_event_id index500 times. Outer plans also differ:
+original scans backward by created_at and filters29500 other-session events;
+candidate takes a bitmap/sort path. JIT accounts for186.430ms in original.
+Thus repeated membership work is strongly supported, but the entire time delta
+must not be attributed solely to that node or to physical disk/CPU saturation.
+Temp-block counters are not measurements of physical disk traffic.
+
+Harness limitation caught during review: each run_probe call shares one15s
+timeout across EXPLAIN ANALYZE and a second execution for result capture.
+Original's plan DID finish at14.119s; its subsequent result capture timed out.
+The notice 'no completed timing/equality claim' is too broad: the completed plan
+timing above is valid, full-result equality for this larger fixture is unknown.
+Final INCONCLUSIVE correctly withholds equality. Small-fixture equality remains
+the only completed equality evidence. Next separate plan/result time budgets
+before further validation; do not call the incident or proposed fix fully proven.
+No upstream patch, commit or push made.
+
+Probe follow-up: split explain_probe and capture_probe into separate top-level
+SELECT statements, each with its own15s timeout. Notices now distinguish plan
+timeout from result-capture timeout. events=1000 smoke exited0 and matched all
+500 projected rows (.local/session-activity-smoke-v2.log). DB stopped again.
+Large rerun pending; retain the original log instead of overwriting it.
+
+Large v2 rerun inspected: .local/session-activity-probe-v2.log reports candidate
+EXPLAIN ANALYZE3.497ms; original plan execution hit its15s timeout (no completed
+timing for that execution). Both separate result captures completed, and the
+full500-row JSON projections matched after sorting by eventId. Thus large-fixture
+equality is now confirmed, not just small-fixture equality. This does not verify
+tie ordering or other tenants/date boundaries/linked sessions; fixture times are
+unique and captures are sequential with no concurrent writes. EXPLAIN execution
+and result capture are separate executions with different instrumentation/cache
+conditions; a timeout in one and completion in the other are not contradictory.
+Together with v1's completed14.119s original plan, the runs support an unstable,
+expensive materialized membership path versus indexed EXISTS on this fixture,
+not a precise speedup factor or a production latency guarantee. No running
+containers remained at inspection. No commit/push.
+
+### Minimal source patch and semantic regression — 2026-09-10
+
+Luna implemented patches/session-activity-exists.patch against the existing
+dev9fb7bace source archive. Main reviewed the baseline/source diff: only the
+relational hasData expression and outer table alias change; website/date filters,
+session array, performance exclusion, projection/order/LIMIT500 and ClickHouse
+remain unchanged. Diagnosis/EXISTS approach credited to issue4526. No new index,
+dependency, memory setting, cache, or API/date-policy change.
+
+scripts/session-activity-check.sh extracts relational SQL from the actual patched
+source; default baseline is reconstructed by reversing the saved patch in a temp
+directory (optional explicit baseline path also supported). It executes both on
+TEMP tables copied from installed schema inside a rolled-back transaction.
+Final fixture:9 events/12 property rows;4 independently expected eventId/hasData
+pairs and full-row multiset equality. Covers multiple properties, no qualifying
+properties, other-site properties, inclusive lower/upper bounds, out-of-range
+and NULL property dates on a retained event, excluded outer dates/site/performance
+events, and two selected sessions. It does not test tie order or the500-row cap.
+Reviewer corrected the first fixture: properties attached only to excluded events
+did not exercise inner date filters; a lower-bound property initially also had a
+qualifying middle-date property. These masking cases were removed before final run.
+
+Main reran successfully:
+`bash scripts/session-activity-check.sh /private/tmp/umami-visitor-pr-check.dOV9fg`
+and `bash -n scripts/session-activity-check.sh`. Reverse git apply --check passed
+on the patched archive; agent also reported forward applicability on baseline.
+Actual baseline/source diff confirms ClickHouse unchanged. Existing Vitest activity
+route and saveSessionData tests:2 files/3 tests passed after patch (2.21s).
+Those tests mock SQL and are not a substitute for the real DB fixture.
+
+Test-first qualification is the previously observed performance failure, not a
+new semantic bug: correctness tests should pass on the baseline too. An agent's
+initial missing-EXISTS source-text assertion was discarded during review; do not
+present it as a behavioral red/green regression. No large patched-source API
+benchmark, browser build, full API suite or production verification performed.
+Prior large timings used the probe's equivalent SQL shape, not this source-linked
+harness. No additional performance claim. Temporary DB stopped; original data
+and unrelated source changes preserved. No commit/push/upstream submission.
+
+### Session activity reproduction and handoff
+
+Repository packaging: summary in `evidence/2026-09-10/session-activity-summary.json`
+is transcribed from the two ignored local logs; it is not raw measurement output.
+Original diagnosis and EXISTS proposal belong to issue4526. The public lab keeps
+only synthetic aggregate evidence, scripts and the attributed minimal patch.
+Historical "no commit/push" entries above describe those stages, not packaging.
+
+Prerequisites: a disposable PostgreSQL database with Umami's migrated
+`public.website_event` and `public.event_data` schema. No source data is required.
+Existing local instance uses container `umami-walkthrough-db-1`, role `walkthrough`,
+database `umami_walkthrough`; its Compose file and volume are intentionally local.
+For another installation substitute its container/role/database in the probe
+command and set `PSQL_DOCKER_CONTAINER`, `PSQL_DOCKER_USER`, `PSQL_DOCKER_DATABASE`
+for the regression script. Run only on disposable infrastructure you own.
+
+From the lab root, with that DB running:
+
+```bash
+docker exec -i umami-walkthrough-db-1 \
+  psql -X -U walkthrough -d umami_walkthrough \
+  < scripts/session-activity-probe.sql
+```
+
+Default30000 events; add `-v events=1000` to psql for the smoke fixture.
+All generated tables are temporary. Setup statements have60s limits; plan/result
+calls each have15s limits. Read the final PASS/INCONCLUSIVE, not just exit status:
+timeouts are intentionally captured. Full logs should remain under ignored.local.
+
+For source correctness, use an external checkout at
+`9fb7bacee62c34d6d05312d063a37c20d581de23`, check then apply the patch using
+`git apply --check` and `git apply` there. Do not reapply to an already patched
+checkout. Then from this lab:
+
+```bash
+bash scripts/session-activity-check.sh /absolute/path/to/patched/umami
+```
+
+The script reverses the supplied patch only in a temporary copy to reconstruct
+baseline SQL. It executes both queries against9 synthetic events/12 properties
+and rolls back. It does not rebuild or start the app. Stop the disposable DB
+after checks; preserve any existing volumes. Next external action is a draft
+verification comment on issue4526, not an automatic PR. Full build/lint and
+current-dev compatibility remain submission work, not completed validations.

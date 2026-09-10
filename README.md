@@ -85,6 +85,19 @@ PostgreSQL 쿼리의 `DISTINCT` 한 단어를 제거한 로컬 비교에서,
 - [소스 패치](patches/tracker-navigation-dispatch.patch), [회귀 검사](scripts/tracker-navigation-check.mjs)
 - [공개 가능한 합성 측정 표본](evidence/2026-09-09/tracker-navigation.json)
 
+## 추가 검증: 세션 활동의 부가정보 조회
+
+[외부 보고 #4526](https://github.com/umami-software/umami/issues/4526)의 진단과
+`EXISTS` 제안을 독립적으로 재현·검증했다. 최초 발견이나 독자 해법은 아니다.
+합성 이벤트 3만 개·부가정보 59.5만 개에서 기존 쿼리는 한 번의 SQL 측정에
+14.1초, 후보는 2.8ms가 걸렸다. 다음 실행에서는 기존 측정이 15초 제한에
+걸렸지만 별도 결과 수집은 완료되어 양쪽 500행이 일치했다.
+단일 실행·임시 테이블 결과이며 API 지연이나 확정 개선율은 주장하지 않는다.
+
+- [과정과 재현 명령](experiments/next-candidates.md#session-activity-reproduction-and-handoff)
+- [최소 패치](patches/session-activity-exists.patch), [소스 기반 회귀 검사](scripts/session-activity-check.sh)
+- [공개 측정 요약](evidence/2026-09-10/session-activity-summary.json)
+
 ## 구성과 실행 경계
 
 [후보 탐색·기각 기록](experiments/next-candidates.md)은 과거 판단을 보존하는 기록이며,

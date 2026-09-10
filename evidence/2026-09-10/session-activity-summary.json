@@ -1,0 +1,43 @@
+{
+  "kind": "manually transcribed qualification summary, not raw logs",
+  "source_issue": "https://github.com/umami-software/umami/issues/4526",
+  "sql_source_base": "9fb7bacee62c34d6d05312d063a37c20d581de23",
+  "environment": {
+    "postgresql": "15.19",
+    "architecture": "aarch64",
+    "tables": "temporary, LIKE installed public schema INCLUDING ALL",
+    "work_mem": "4MB",
+    "hash_mem_multiplier": 2,
+    "synthetic_events": 30000,
+    "synthetic_properties": 595000,
+    "target_events": 500
+  },
+  "runs": [
+    {
+      "local_log": ".local/session-activity-probe.log",
+      "candidate_explain_execution_ms": 2.803,
+      "original_explain_execution_ms": 14118.519,
+      "original_materialize_loops": 500,
+      "original_materialize_rows_per_loop_rounded": 298746,
+      "original_temp_read_blocks": 472433,
+      "result_equality": "inconclusive: second execution shared the 15s budget with EXPLAIN"
+    },
+    {
+      "local_log": ".local/session-activity-probe-v2.log",
+      "candidate_explain_execution_ms": 3.497,
+      "original_explain_execution_ms": null,
+      "original_explain_status": "15s statement timeout",
+      "result_equality": "PASS: all 500 projected rows, canonicalized by event ID",
+      "budgets": "separate 15s statements for EXPLAIN and result capture"
+    }
+  ],
+  "limitations": [
+    "Single executions, not repeated benchmark medians or API timings",
+    "Temporary-table local buffers differ from production storage",
+    "Different PostgreSQL version and architecture from reporter",
+    "Outer scan plans and JIT also differ; not all time delta belongs to membership checks",
+    "No production CPU saturation, physical I/O volume or speedup ratio established",
+    "Large probe uses equivalent SQL shape; separate small check extracts patched source SQL",
+    "No browser/full API suite or production verification"
+  ]
+}
