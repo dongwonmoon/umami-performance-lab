@@ -12,7 +12,7 @@ API 응답 시간을 931.3 → 550.2ms, 약 41% 줄였다.**
 - **기술:** TypeScript, PostgreSQL, Prisma, Docker, Vitest
 - **작업 시점:** 2026년 9월
 - **기여 상태:** [Umami PR #4523](https://github.com/umami-software/umami/pull/4523)
-  제출. **2026-09-09 확인 기준 Open, 미병합.** 운영 환경에 배포한 성과는 아니다.
+  제출. **2026-09-10 확인 기준 Open, 미병합.** 운영 환경에 배포한 성과는 아니다.
 
 ## 1. 무엇을 해결하려 했나
 

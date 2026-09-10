@@ -2,7 +2,8 @@
 
 ## Closure — 2026-09-09
 
-Validated local candidate; further experiments paused at the user's request.
+Validated within the recorded local cases; product-wide equivalence is not
+established. Further experiments paused at the user's request.
 PR submission, push and deployment are explicitly deferred. This is a local
 synthetic-data case study, not production evidence. The chronological notes
 below retain each stage's historical decision; this closure is current status.
@@ -18,6 +19,44 @@ and 217.4 to 90.2ms (last-click). Later source-port verification established
 The trade-off is SQL-side JSON assembly and shared CTE materialization;
 production cardinality, peak memory, full build and browser behavior remain
 unverified. Raw internal BigInt/Number differences are documented below.
+
+## Record reliability audit — 2026-09-10
+
+Read-only audit of saved JSON, probe code, source patch and source port; no new
+DB run, implementation, external post or PR preparation. Main recomputed the
+resource medians and checked the12 timed prototype samples,8 edge reports and
+14 source-port reports. The stated numbers and exact-equality flags are supported
+by those artifacts. No fabricated result or observed output defect was found
+in this audit. Unit tests were inspected, not rerun; historical9/9 remains a
+historical claim. Probe timing and source-port equality must remain separate.
+
+Important distinctions before any future adoption:
+
+- Top20 membership has no deterministic tie-break. The edge oracle permits any
+  valid cutoff membership, but the artifact ALSO records exact pair equality
+  for all8 cases; the equality claim is not based solely on that permissive
+  oracle. Unlike Journey, differing selections were NOT observed here. That
+  observation does not prove exact selection under every data/plan condition.
+- SQL JSON assembly uses json_agg over the dimension result without an aggregate
+  ORDER BY. Tested array order matched. Ordered dimension queries and this
+  observation should not be advertised as a new universal array-order guarantee.
+- Eight statement snapshots become one. Under concurrent writes this changes
+  which database state the report sees; fixed read-only comparisons do not
+  qualify it. A single snapshot can improve within-report consistency, but this
+  is an inference, not a measured concurrent-write result or automatic approval.
+- Raw BigInt→Number changes are already disclosed; serialized reports matched.
+  The existing serializer also converts BigInt, so this is not evidence of a
+  newly introduced public precision defect. New raw-function callers would
+  require rechecking that assumption.
+
+Known gaps remain populated property filtering, source-port high-cardinality
+cutoff behavior, concurrent writes, full API/browser behavior and peak memory.
+Small fixtures are not a universal product-compatibility proof. Keep this as a
+scoped local candidate, not an approved production change. No new sorting rule
+or other fix is justified by this audit alone. Raw evidence/probes are currently
+ignored.local files, not independently runnable public evidence; the published
+patch's mocked tests do not replace them. Reproducible evidence packaging would
+be separate work before external sharing.
 
 ## Reusing the patch
 

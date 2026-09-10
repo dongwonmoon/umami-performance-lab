@@ -5,8 +5,10 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { isDeepStrictEqual } from 'node:util';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = '/private/tmp/umami-qualification';
+const ROOT = process.env.UMAMI_DIR ?? '/private/tmp/umami-qualification';
+const EXPECTED_COMMIT = process.env.UMAMI_EXPECTED_COMMIT ?? 'ca661c7057984aa98ed4f7083d84dae2f65bfcb0';
 const WEBSITE = '18573f23-3e24-44ef-b580-154cf371e7fe';
 const END = '2026-09-06T15:00:00.000Z';
 const smoke = process.argv.includes('--smoke');
@@ -67,8 +69,8 @@ async function main() {
     return;
   }
 
-  const output = `/Users/dongwon/workspace/umami-performance-lab/.local/journey-distinct-check-${new Date().toISOString().replaceAll(':', '').replaceAll('.', '')}.json`;
-  mkdirSync('/Users/dongwon/workspace/umami-performance-lab/.local', { recursive: true });
+  const output = fileURLToPath(new URL(`../.local/journey-distinct-check-${new Date().toISOString().replaceAll(':', '').replaceAll('.', '')}.json`, import.meta.url));
+  mkdirSync(new URL('../.local/', import.meta.url), { recursive: true });
   const run: any = { recorded_at: new Date().toISOString(), status: 'running', output, smoke, ties, oracle, website_id: WEBSITE, end_date: END, cases: [], omitted_cases: [{ name: 'cohort', reason: 'No cohort fixture was assumed; cohort filters omitted.' }], errors: [] };
   const save = () => writeFileSync(output, JSON.stringify({ ...run, updated_at: new Date().toISOString() }, null, 2));
   let prisma: any;
@@ -87,7 +89,7 @@ async function main() {
     assert(!process.env.CLICKHOUSE_URL && !process.env.DATABASE_REPLICA_URL, 'Only the local primary PostgreSQL is in scope');
     const sourcePath = 'src/queries/sql/reports/getJourney.ts';
     run.upstream_commit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim();
-    assert.equal(run.upstream_commit, 'ca661c7057984aa98ed4f7083d84dae2f65bfcb0');
+    assert.equal(run.upstream_commit, EXPECTED_COMMIT);
     assert.equal(execFileSync('git', ['diff', 'HEAD', '--', sourcePath], { cwd: ROOT, encoding: 'utf8' }), '', 'Journey source must remain unmodified');
 
     prisma = (await import(`${ROOT}/src/lib/prisma.ts`)).default;

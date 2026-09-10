@@ -2,10 +2,22 @@
 
 ## Outcome and scope
 
+**Current decision — 2026-09-10: submission preparation paused.** Performance
+improvement is supported, but product compatibility is unresolved. Different
+equal-count paths can enter the top100, changing displayed nodes and totals.
+Unspecified SQL tie ordering does not establish that users or maintainers accept
+that visible change. Earlier submission-preparation recommendations below are
+superseded, not evidence of approval. Build/lint success alone cannot resolve
+this decision. No Journey PR has been submitted; preserve the experimental patch
+and evidence, but do not publish it or add a tie-break rule without a new decision.
+
 An independent local performance case study against Umami v3.3.1
 (`ca661c7057984aa98ed4f7083d84dae2f65bfcb0`). One PostgreSQL SQL word,
 `DISTINCT`, was removed; no algorithm, index, cache, concurrency setting,
 ClickHouse query or product ordering policy was changed.
+
+That means no explicit ordering clause was changed, NOT that visible product
+behavior was preserved. This distinction was underweighted during PR planning.
 
 On the fixed synthetic DB, 181-day Journey API latency fell from 391.8 to
 286.6ms and DB CPU/request from 387.3 to 274.6ms (medians of paired-block
@@ -114,6 +126,71 @@ for the unavailable original synthetic DB. Fresh clones must create and freeze
 their own synthetic input; historical commands depend on the noted local paths.
 
 ## Investigation timeline
+
+### Submission qualification — 2026-09-10
+
+Current dev checked:1d7874b7d946e9d8e9b257a051fa0789ddd32728.
+Existing one-word patch passes git apply --check without being applied to the
+session-activity PR checkout. No Journey change or submission made here.
+Old qualification checkout is incomplete, so main retrieved getJourney.ts from
+GitHub at the original pinned ca661c7 commit and diffed it against current dev:
+the only difference is an explicit `Promise<JourneyResult[]>` return type on
+getJourney. SQL and parseResult are unchanged. This is source compatibility,
+not renewed API/performance verification. Historical timings stay v3.3.1 results.
+
+Luna rechecked current call path/schema/UI: same timestamp-only row numbering,
+count-only top100 ordering, and UI node totals built from selected paths. Both
+tie caveats remain relevant; unspecified does not mean invisible to users.
+PR keyword search `journey distinct` found none, not proof of no overlapping
+work. A focused PR is a viable candidate if the compatibility caveat is explicit;
+do not add deterministic sorting or fix the adjacent UI sort in this change.
+Before submission, rerun relevant checks on an isolated current-dev candidate;
+the old diagnostic hardcodes a now-incomplete checkout and cannot be advertised
+as a ready fresh-clone command. No long measurement or PR authorized by this
+qualification step. Investigation note remains uncommitted until stage closure.
+
+Current-source small rerun2026-09-10: checker now accepts UMAMI_DIR and
+UMAMI_EXPECTED_COMMIT, retaining historical defaults and exact source/localhost
+guards. Output directory is script-relative; main preserved the output field as
+an absolute filesystem string. No SQL, case, or oracle logic changed.
+Agent checked a wrong expected commit rejects before DB calls; main reran --check.
+
+Used the installed checkout of dev1d7874b7 plus unrelated session-activity commit
+1faf55d72afd9419a71254645a3132fe4cfaa60a; Journey source is unmodified there.
+The checker removes DISTINCT only at rawQuery boundary. Existing local PG15 DB
+was used with statement-local9-row VALUES input (--ties), not stored analytics.
+All8 baseline/candidate pairs have exact parsed response equality and preserve
+three visits. Unique timestamps are invariant to reversed physical input;
+tied timestamps change the baseline in both3/7-step cases, as historically seen.
+Artifact: .local/journey-distinct-check-2026-09-10T020020128Z.json (ignored).
+Its output field used a file URL before the main's filesystem-string adjustment;
+that subsequent adjustment affects only output naming, not the measured queries.
+This does not retest high-volume top100 selection or performance.
+
+```sh
+UMAMI_DIR=/private/tmp/umami-session-pr-check.2I1SLd \
+UMAMI_EXPECTED_COMMIT=1faf55d72afd9419a71254645a3132fe4cfaa60a \
+DATABASE_URL=postgres://umami:umami@127.0.0.1:5433/umami \
+/private/tmp/umami-session-pr-check.2I1SLd/node_modules/.bin/tsx \
+  --tsconfig /private/tmp/umami-session-pr-check.2I1SLd/tsconfig.json \
+  scripts/journey-distinct-check.ts --ties
+```
+
+Existing Journey page, WebsiteValueComboBox and report-permission Vitest tests
+passed3 files/8 tests (4.41s) on the same current source; these do not exercise SQL.
+DB stopped afterward, data preserved. No Journey source edit, build, commit/push
+or PR submission in this step. Next submission preparation must keep the Journey
+commit separate from the session-activity branch and disclose both tie caveats.
+
+PR draft preparation2026-09-10: separate non-hardlinked clone at
+`/private/tmp/umami-journey-pr-check.mSoeiB`, branch `codex/journey-distinct`,
+based directly on dev1d7874b7d946e9d8e9b257a051fa0789ddd32728. Applied the
+one-word patch; diff --check passes and the only changed file is getJourney.ts
+(1 line added/1 removed). Session-activity change is not part of this branch.
+Draft saved in ignored.local/journey-pr-body.md with explicit top100/UI and
+timestamp-tie caveats, and an unresolved build/lint checklist item. No source
+commit, remote branch or PR created. Current-dev API/performance has not been
+remeasured. Install/build/test/lint in this fresh checkout remains pending.
 
 ## New qualification: redundant Journey deduplication — 2026-09-07
 
