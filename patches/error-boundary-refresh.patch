@@ -2,11 +2,13 @@ diff --git a/src/components/common/ErrorBoundary.tsx b/src/components/common/Err
 index 39803d8..2e98890 100644
 --- a/src/components/common/ErrorBoundary.tsx
 +++ b/src/components/common/ErrorBoundary.tsx
-@@ -11,2 +11,2 @@
+@@ -9,8 +9,8 @@ const logError = (error: unknown, info: ErrorInfo) => {
+ };
+ 
  export function ErrorBoundary({ children }: { children: ReactNode }) {
 -  const { t, messages } = useMessages();
 +  const { t, labels, messages } = useMessages();
-@@ -14,3 +14,3 @@
+ 
 -  const fallbackRender = ({ error, resetErrorBoundary }) => {
 +  const fallbackRender = ({ error }) => {
      return (
