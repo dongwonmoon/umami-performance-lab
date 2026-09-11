@@ -104,6 +104,12 @@ PostgreSQL 쿼리의 `DISTINCT` 한 단어를 제거한 로컬 비교에서,
 
 ## 구성과 실행 경계
 
+[수동 배포 확인 검사](experiments/next-candidates.md#deployment-acceptance-boundary--2026-09-10)는
+전용 로컬 합성 사이트에 pageview 하나를 전송하고 조회에서 확인해야 성공한다.
+실행: `node scripts/deployment-smoke.mjs` (필수 환경변수·제약은 연결된 기록 참고).
+검사 자체의 테스트: `node --test scripts/deployment-smoke.test.mjs`.
+heartbeat 대체나 프로덕션 모니터링이 아닌 로컬 API 수집·조회 확인용이다.
+
 [후보 탐색·기각 기록](experiments/next-candidates.md)은 과거 판단을 보존하는 기록이며,
 현재 작업 대기열은 아니다. upstream 제출 과정은 각 사례 문서에서 연결한다.
 

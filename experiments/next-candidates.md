@@ -1278,3 +1278,141 @@ and both patches, with a small portfolio-index entry. No upstream PR/comment or
 production deployment. Local DB backups, raw logs and Compose files stay ignored.
 After the check, stopped only the isolated app/DB and closed the test tab; retained
 images, volumes and backups. No unrelated service or source checkout was removed.
+
+### Deployment acceptance boundary — 2026-09-10
+
+Question: does our existing deployment success check establish that analytics can
+be collected and read? Read the pinned v3.3.1 source, not live upstream HEAD.
+`src/app/api/heartbeat/route.ts` unconditionally returns `{ok:true}`; neither DB nor
+collection is exercised. Official Compose calls that route; our isolated Compose
+uses `curl --fail` on it. Startup `scripts/start-docker.sh` runs check-db/migrations
+before starting the server, but that one-time check is not continuing verification.
+This separation can be appropriate for liveness; do not label it a product bug.
+
+Direct local observation using the final recovery-UX image above and the existing
+synthetic fixture: authenticated `/api/websites` and heartbeat both returned200.
+After stopping only DB, heartbeat still returned200/`{ok:true}`, while the same
+authenticated websites request returned500. A finally block restarted DB;
+pg_isready confirmed accepting connections. Then stopped the scoped project again.
+No events were inserted, migrations changed, or public endpoints faulted. This
+demonstrates a read-availability gap in using heartbeat as acceptance, NOT a
+collection-only failure, failed-release reproduction, or production frequency.
+
+Luna inspected existing checks; main confirmed CI and Playwright configuration.
+Pinned `.github/workflows/ci.yml` runs install, Vitest and build with SKIP_DB_CHECK=1;
+it does not run Playwright. `playwright.config.ts` selects tests/e2e and defaults to
+pnpm dev, with optional external server configuration. Send unit tests mock saveEvent;
+these checks do not prove persistence in a deployed image. Do not generalize this
+to all Umami installations or undisclosed upstream checks.
+
+Our earlier upgrade fixture already verified send → stats plus persisted DB rows
+manually. Reuse that contract rather than create a new framework. Next bounded
+improvement: a manually invoked deployment acceptance check on a dedicated synthetic
+site, sending one uniquely identifiable event and requiring its queried count,
+with bounded timeout and failure exit status. Keep it separate from liveness and
+normal customer data. Direct API coverage would not prove browser tracker loading,
+CSP/CORS behavior or the full UI; those must remain explicit limitations.
+No new script, CI, scheduled monitoring, rollback automation, commit or push in
+this qualification step. Reusing the known DB-stop fault established the check's
+scope only; it is not a second portfolio incident.
+
+Manual checker implementation (approved scope): use Node's existing fetch/assert
+facilities, not a new monitoring stack. The checker owns one send, scoped by a fresh
+UUID URL. Require a zero-count baseline and exactly one pageview on the same filtered
+stats query after sending. A 200/no-op send is not success. Stop within30 seconds;
+do not retry writes or silently delete their evidence. Use a dedicated synthetic
+site with domain `deployment-smoke.invalid`, and initially accept only loopback HTTP
+origins with redirects disabled. Credentials come from environment and are not logged.
+This deliberately remains a local deployment-acceptance rehearsal, not a remote
+production deployment tool. Implementation/test files are `scripts/deployment-smoke.mjs`
+and `scripts/deployment-smoke.test.mjs`; main checks real deployed-image behavior
+after Luna's bounded implementation. No commit/push authorized for this step.
+
+Run on the disposable local deployment (Node22+; existing synthetic admin only):
+
+```sh
+UMAMI_BASE_URL=http://127.0.0.1:3011 \
+UMAMI_WEBSITE_ID=2eb11d63-cef9-4bd6-a619-281392517a78 \
+UMAMI_USERNAME=admin UMAMI_PASSWORD=umami \
+node scripts/deployment-smoke.mjs
+
+node --test scripts/deployment-smoke.test.mjs
+```
+
+The UUID belongs only to this retained local fixture, not a portable seeded account.
+On another disposable instance first create a website with domain
+`deployment-smoke.invalid`, then supply its ID and that instance's credentials.
+The example password is the local synthetic default, never a production suggestion.
+Do not put real credentials in shell history; this initial tool is loopback-only.
+The app must already be running; the checker does not build, deploy, create sites,
+or manipulate Docker. A run leaves one pageview if sending succeeded, including when
+later verification fails. Re-running uses a fresh UUID, not a write retry.
+
+Verification — 2026-09-10: main reviewed the first implementation and found its
+query end time preceded the send, excluding the newly created event. The original
+test fixture ignored time/path filtering and missed this bug. Revised fixture
+filters both, and the checker uses one shared30s deadline across login, validation,
+send and polling (each request at most10s and capped by remaining time). No guarantee
+is made across host/server clock skew; this is a same-host local check.
+
+Main reran `node --test scripts/deployment-smoke.test.mjs`:5 passed. Tests cover
+one scoped send/read, HTTP200 without storage failing, unsafe target rejection before
+network use, CLI success output, and CLI failure without credential disclosure. A
+simulated HTTP server establishes checker behavior, not an actual Umami outage.
+
+Real deployed-image results, on the same final v3.3.1 recovery-UX image retained above:
+- Healthy: exit0; marker `/deployment-smoke/99d3a940-9af1-4ef7-8566-ca8274284f56`,
+  pageviews1.
+- DB stopped: heartbeat200, checker exit1, empty stdout, `stage=login status=500`.
+  This fails before send; it is not evidence of a real collection-only outage.
+- DB restored: exit0; marker `/deployment-smoke/7f192258-4054-4e43-af3a-69385ac0cdc4`,
+  pageviews1. Independent SQL confirmed2 total rows/2 unique marker paths in the
+  dedicated site. Both are synthetic pageviews retained as evidence.
+
+The test proves API collection/read acceptance for this fixture, not tracker/CORS,
+UI rendering, remote infrastructure, all application features or deployment rollback.
+No upstream product change or heartbeat replacement. The manual checker is ready
+for subsequent local deployments; no CI/scheduler integration was added. Scoped
+app/DB stopped, volumes retained. `git diff --check` passes. Changes remain uncommitted.
+
+Deployment rehearsal — 2026-09-10: used two already-local3.3.1 images, not a new
+schema version or a remote release. First booted the pinned official image
+`sha256:fa32d116cf20cad52cbc3fad9a63b46e7fa02299d8f967168eb453d49c476b4a`
+with upgrade-target.yml and --pull never. Verified actual image, then checker exit0
+with marker `945c9998-9307-4d71-b7b4-c06caae7c394`, pageviews1.
+
+Then replaced ONLY app using the following command; waited for exit0, verified
+actual running image matched the recorded candidate digest, and ran the checker
+with the synthetic environment documented above. Do not mark acceptance on Compose
+health alone. Stop on any failed step; no automatic rollback is implied.
+
+```sh
+docker compose -f .local/upgrade-compose.yml -f .local/recovery-candidate.yml \
+  up -d --no-deps --pull never --wait --wait-timeout 60 app
+docker inspect umami-upgrade-check-app-1 --format '{{.Image}}'
+# Compare to the expected immutable image ID before running deployment-smoke.mjs.
+```
+
+Actual candidate image was `sha256:1f59f5c25db54a90be0e4232c4e98b7e118624c71bfbbc74cc2a99618c09c2db`;
+checker exit0 with marker `95b41b90-3f8d-4ccd-ae73-e78b12baf01b`, pageviews1.
+DB container ID `f88b53f8eb4f79244b9bbee1a5c833c71f9f7646f8479a0d1c853f5561b242a0`,
+creation time and volume `umami-upgrade-check_upgrade-data` remained identical.
+Before/after migration count24, unfinished0. Dedicated site now has4 rows/4 unique
+paths (two prior checks plus these two); no whole-database equivalence claim.
+
+Outcome: the manual acceptance procedure worked after an actual image replacement.
+No deployment defect, rollback, measured reduction in operator errors, zero-downtime
+guarantee or production benefit was established. Existing commands plus one checker
+suffice for now; no deployment wrapper, CI or monitoring was justified by this run.
+Stopped only test app/DB afterward; images, volumes and synthetic records retained.
+No additional code, commit, push or upstream action in this rehearsal.
+
+Closure — 2026-09-11: user reported `docker system prune -a --volumes` and reboot.
+The Docker socket is currently unavailable; image/container/volume survival is
+unknown, not confirmed deletion or retention. The older pre-upgrade dump still
+matches SHA256 `41ec2b97da7e00999ae76ad157003f4be98a522464a98a14453bc62b4fd2e942`;
+it predates the deployment-smoke site and cannot restore that fixture. Recheck
+runtime resources before reusing the historical IDs/commands above. No rebuild or
+restore was needed for closure. Fresh Docker-independent tests:5 passed, diff check
+clean. User requested resuming personal-repository commit/push cleanup; only the
+checker, its tests, README link and this record are included, no raw data or backup.
